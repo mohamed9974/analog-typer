@@ -1,8 +1,6 @@
 #ifndef _INCLUDES_H_
 #define	_INCLUDES_H_
 
-// PIC18F8722 Configuration Bit Settings @ 40MHz
-
 // #include <xc.h>
 // #include <p18cxxx.h>
 #include <stdint.h>
@@ -31,7 +29,7 @@
 #pragma config  EBTR5 = OFF, EBTR6 = OFF, EBTR7 = OFF
 #pragma config  EBTRB = OFF
 #pragma config DEBUG = ON
-// #include <xc.h>
+#include <xc.h>
 
 // You can use this array to convert numbers in range [0x0-0xF] to seven segment
 // glyphs by using the value at the index that you want to convert.

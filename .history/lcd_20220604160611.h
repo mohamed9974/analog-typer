@@ -54,9 +54,9 @@ void CreateChar(uint8_t address, uint8_t* charmap);
 //
 void LcdCmd(uint8_t cmd);
 void LcdData(uint8_t data);
-void LcdPrint(char* buf);
+void LcdStr(char* buf);
 void LcdClear();
-void LcdSetCursor(uint8_t row, uint8_t col);
+void LcdMove(int row, int col);
 
 
 #endif	/* _LCD_H_ */

@@ -86,12 +86,3 @@ void LcdPrint(char *buf){
         }
     }
 }
-
-void LcdPrintInt(int num){
-    // Send 'num' to the LCD.
-    // Prints up to 16 characters. 
-    // If more than 16 characters are sent,
-    char buf[16];
-    sprintf(buf, "%d", num);
-    LcdPrint(buf);
-}

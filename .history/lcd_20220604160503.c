@@ -46,24 +46,6 @@ void LcdData(uint8_t data){
     LCD_RS = 0;
 }
 
-//Sets the current display cursor of the LCD
-// row : the row at which the text will be displayed, a value from [1, 2]
-// col : the column  at which the text will be displayed, a value from [1, 16]
-void LcdSetCursor(uint8_t row, uint8_t col){
-    if(row == 1){
-        LcdCmd(0x80 + col - 1);
-    }
-    else if(row == 2){
-        LcdCmd(0xC0 + col - 1);
-    }
-}
-
-void LcdClear(void){
-    LcdCmd(0x01);
-    __delay_ms(2);
-}
-
-
 void CreateChar(uint8_t addr, uint8_t charmap[]) {
   addr &= 0x7; // we only have 8 locations 0-7
   LcdCmd(0x40 | (addr << 3)); // Set the address for custom char.
@@ -72,7 +54,7 @@ void CreateChar(uint8_t addr, uint8_t charmap[]) {
   }
 }
 
-void LcdPrint(char *buf){
+void LcdStr(char *buf){
     // Send 'buf' to the LCD.
     // Prints up to 16 characters. 
     // If more than 16 characters are sent,
@@ -85,13 +67,4 @@ void LcdPrint(char *buf){
             i = 0;
         }
     }
-}
-
-void LcdPrintInt(int num){
-    // Send 'num' to the LCD.
-    // Prints up to 16 characters. 
-    // If more than 16 characters are sent,
-    char buf[16];
-    sprintf(buf, "%d", num);
-    LcdPrint(buf);
 }
