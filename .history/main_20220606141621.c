@@ -14,7 +14,7 @@ tmr_state_t t_state;
 btn_state_t b_state;
 state_t state;
 uint8_t timer_count;
-byte customChar[8];
+byte *customChar;
 
 //==============================================================================
 // Initialize global variables
@@ -180,7 +180,6 @@ void buttons_init() {
 }
 // ============================================================================
 // ************* Input task and functions ****************
-//==============================================================================
 // The "input task" monitors RE[0-5] and increments associated counters
 // whenever a high pulse is observed (i.e. HIGH followed by a LOW).
 uint8_t re0_cnt = 0; // Current count for RE0 input
@@ -251,7 +250,9 @@ void button_pressing() {
   }
 }
 //==============================================================================
-// ******************* buttons interrupt service routine **********************
+// buttons interrupt service routine
+// Buttons used:
+// RE0 - RE5
 //==============================================================================
 void buttons_isr() {
   // Check the button state
@@ -289,7 +290,7 @@ void buttons_isr() {
   }
 }
 //==============================================================================
-// ************************ buttons_init_interrupt *****************************
+// buttons_init_interrupt
 //==============================================================================
 void buttons_init_interrupt() {
   // Set the interrupt priority
@@ -307,7 +308,7 @@ void buttons_init_interrupt() {
   T0CONbits.TMR0ON = 1;
 }
 //==============================================================================
-// **************************** buttons_update *********************************
+// buttons_update
 //==============================================================================
 void buttons_update() {
   // Check the button state
@@ -340,8 +341,7 @@ void buttons_update() {
 }
 
 //==============================================================================
-// ***Interrupt Service Routine handling lcd, adc, timer , buttons and leds ***
-//==============================================================================
+// Interrupt Service Routine handling lcd, adc, timer , buttons and leds
 ISR(TIMER1_COMPA_vect) {
   // Timer1 is used to generate a 1ms interrupt
   // This interrupt is used to update the lcd and the adc
@@ -371,7 +371,7 @@ ISR(TIMER1_COMPA_vect) {
   UpdateSevenSeg(customCharCount, customCharPos);
 }
 //==============================================================================
-// ************************** Interrupt Handler ********************************
+// Interrupt Handler 
 //============================================================================== 
 void __interrupt() ISR_Handler() {
   // Check if the interrupt is from the timer
@@ -386,12 +386,12 @@ void __interrupt() ISR_Handler() {
     // Clear the interrupt flag
     PIR1bits.ADIF = 0;
     // Update the adc
-
+    if (state == TMS)
     adcReading = adc_update();
   }
 }
 //==============================================================================
-// *****Interrupt intizialization for all the interrupts(buttons,timer) *******
+// Interrupt intizialization for all the interrupts(buttons,timer)
 //==============================================================================
 void interrupts_init() {
   timer_init();
@@ -401,7 +401,7 @@ void interrupts_init() {
   INTCONbits.GIEL = 1;
 }
 //==============================================================================
-// ************************* Initialize the board *****************************
+// Initialize the board
 //==============================================================================
 void board_init() {
   // initialize global variables
@@ -427,17 +427,11 @@ void board_init() {
 };
 
 //==============================================================================
-//************************ Text entry mode routine******************************
+// Text entry mode routine
 //==============================================================================
 void text_entry_mode() {
-  // Start the ADC if it hasnt been started
-  if (ADCON0bits.ADON == 0) {
-    // Start the ADC
-    adc_start();
-  }
   // Check the program state
   button_pressing();
-  LcdSetCursor(1, adcReading)
   // check if the button RE5 is pressed
   if (re5_cnt > 0) {
     re5_reset();
@@ -452,38 +446,33 @@ void text_entry_mode() {
     // Scroll backwards in custom characters array
     customCharPos--;
     // Show the custom character on the LCD
-    LcdPrint(customChar[customCharPos]);
+    // TODO
+
   } else if (re2_cnt > 0) {
     re2_reset();
     // Scroll forwards in predefined characters array
     preCharPos++;
     // Show the predefined character on the LCD
-    LcdPrint(preChar[preCharPos]);
+    // TODO
+
   } else if (re1_cnt > 0) {
     re1_reset();
     // Scroll backwards in predefined characters array
     preCharPos--;
-    LcdPrint(preChar[preCharPos]);
+    // TODO
+
   } else if (re0_cnt > 0) {
     re0_reset();
     // Scroll forwards in custom characters array
     customCharPos++;
-    LcdPrint(customChar[customCharPos]);
+    // TODO
+    // Stay at the same program state
   }
   if (re3_cnt > 0 || re2_cnt > 0 || re1_cnt > 0 || re0_cnt > 0) {
     // stay in the same program state
     state = TEM;
   }
-  Pulse();
-  LcdPrint("_");
 }
-//==============================================================================
-// **********************Custom character mode routine**************************
-//==============================================================================
-
-
-
-//==============================================================================
 // ============================================================================
 // Main program routine
 // description: the main program routine will initialize the board, and then

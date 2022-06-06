@@ -180,7 +180,6 @@ void buttons_init() {
 }
 // ============================================================================
 // ************* Input task and functions ****************
-//==============================================================================
 // The "input task" monitors RE[0-5] and increments associated counters
 // whenever a high pulse is observed (i.e. HIGH followed by a LOW).
 uint8_t re0_cnt = 0; // Current count for RE0 input
@@ -251,7 +250,9 @@ void button_pressing() {
   }
 }
 //==============================================================================
-// ******************* buttons interrupt service routine **********************
+// buttons interrupt service routine
+// Buttons used:
+// RE0 - RE5
 //==============================================================================
 void buttons_isr() {
   // Check the button state
@@ -289,7 +290,7 @@ void buttons_isr() {
   }
 }
 //==============================================================================
-// ************************ buttons_init_interrupt *****************************
+// buttons_init_interrupt
 //==============================================================================
 void buttons_init_interrupt() {
   // Set the interrupt priority
@@ -307,7 +308,7 @@ void buttons_init_interrupt() {
   T0CONbits.TMR0ON = 1;
 }
 //==============================================================================
-// **************************** buttons_update *********************************
+// buttons_update
 //==============================================================================
 void buttons_update() {
   // Check the button state
@@ -480,6 +481,7 @@ void text_entry_mode() {
 //==============================================================================
 // **********************Custom character mode routine**************************
 //==============================================================================
+
 
 
 

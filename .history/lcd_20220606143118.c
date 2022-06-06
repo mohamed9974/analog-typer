@@ -71,41 +71,18 @@ void CreateChar(uint8_t addr, uint8_t charmap[]) {
   }
 }
 
-void LcdPrint(char *str){
-    while(*str){
-        LcdData(*str++);
-    }
-}
-
-void LcdPrintatlocation(char *buf, uint8_t row, uint8_t col){
-    LcdSetCursor(row, col);
-    LcdPrint(buf);
-}
-
-
-
-void LcdPrintAll(char *buf){
+void LcdPrint(char *buf){
     // Send 'buf' to the LCD.
     // Prints up to 16 characters. 
     // If more than 16 characters are sent,
     // the string will be cycled. from the beginning.
-    int x,y=1;
+    int x,y=0;
     uint8_t i = 0;
     while(buf[i] != '\0'){
         LcdData(buf[i]);
         i++;
-        x++;
-        if(x == 17){
-            x = 1;
-            y++;
-            if(y == 3){
-                y = 1;
-                LcdCmd(0x80);
-            }
-            else{
-                LcdCmd(0xC0);
-            }
-            LcdSetCursor(y, x);
+        if(i == 16){
+            i = 0;
         }
     }
 }

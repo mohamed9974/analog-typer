@@ -1,6 +1,5 @@
 #include "adc.h"
 #include "Includes.h"
-#include <sys/types.h>
 
 // PIC 18F8722 ADC module initialization @40MHz
 //==============================================================================
@@ -95,19 +94,6 @@ void ADC_Read(byte channel) {
 // updates all fuctions of adc module and returns the value of the adc
 //==============================================================================
 int adc_update(void) {
-  // if the adc is busy
-  if (ADCON0bits.CHS != 0b0000) {
-    ADC_Read(0b0000);
-  } else {
-    ADC_Read(0b0000);
-  }
-  uint8_t res = (ADRESH << 8) + ADRESL;
-
-  if (res > 1023) {
-    res = 1023;
-  }
-  if (res < 0) {
-    res = 0;
-  }
-  return int((res + 1) / 64);
+  ADC_Read(0);
+  return (ADRESH << 8) + ADRESL;
 }

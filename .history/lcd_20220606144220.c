@@ -71,20 +71,7 @@ void CreateChar(uint8_t addr, uint8_t charmap[]) {
   }
 }
 
-void LcdPrint(char *str){
-    while(*str){
-        LcdData(*str++);
-    }
-}
-
-void LcdPrintatlocation(char *buf, uint8_t row, uint8_t col){
-    LcdSetCursor(row, col);
-    LcdPrint(buf);
-}
-
-
-
-void LcdPrintAll(char *buf){
+void LcdPrint(char *buf){
     // Send 'buf' to the LCD.
     // Prints up to 16 characters. 
     // If more than 16 characters are sent,
