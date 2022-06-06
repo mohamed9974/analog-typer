@@ -22,7 +22,7 @@
 void ADC_Init(void) {
   // ADCON1 Register
   ADCON1bits.ADCS =
-      0b010; // ADC conversion clock period: 4*ADC_CLK_PERIOD = 4*250ns = 1us
+      0b0100; // ADC conversion clock period: 4*ADC_CLK_PERIOD = 4*250ns = 1us
   ADCON1bits.ADFM = 1; // ADC result right justified
   ADCON1bits.ADPREF =
       0b00; // ADC Voltage Reference: 5V (VREF+ = VDD, VREF- = VSS)
@@ -32,7 +32,7 @@ void ADC_Init(void) {
   ADCON1bits.VCFG = 0b00;   // ADC Input Buffer Gain: 1x
 
   // Tristate Register
-  ADC_PORT_DIR = 0x05; // AN0-AN3 are inputs
+  TRISA = 0x05; // AN0-AN3 are inputs
   // ADCON2 Register
   ADCON2bits.ACQT =
       0b010; // ADC aquisition time: 4*ADC_CLK_PERIOD = 4*250ns = 1us
@@ -88,12 +88,4 @@ void ADC_Read(byte channel) {
   ADCON0bits.GO_DONE = 1;   // ADC conversion start: Enabled
   while (ADCON0bits.GO_DONE == 1)
     ; // Wait for conversion to complete
-}
-//==============================================================================
-// adc_update()
-// updates all fuctions of adc module and returns the value of the adc
-//==============================================================================
-int adc_update(void) {
-  ADC_Read(0);
-  return (ADRESH << 8) + ADRESL;
 }

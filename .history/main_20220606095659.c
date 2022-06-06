@@ -7,7 +7,6 @@ typedef enum { BTN_IDLE, BTN_PRESSED, BTN_RELEASED } btn_state_t;
 typedef enum { INIT, TEM, CDM, TSM } state_t;
 
 uint8_t customCharPos;
-uint8_t preCharPos;
 uint8_t customCharCount;
 tmr_state_t t_state;
 btn_state_t b_state;
@@ -430,23 +429,21 @@ void text_entry_mode() {
     state = TEM;
   } else if (re2_cnt > 0) {
     re2_reset();
-    // Scroll forwards in predefined characters array
-    preCharPos++;
-    // Show the predefined character on the LCD
+    // Scroll forwards in custom characters array
+    customCharPos++;
+    // Show the custom character on the LCD
     // TODO
     // Stay at the same program state
     state = TEM;
   } else if (re1_cnt > 0) {
     re1_reset();
-    // Scroll backwards in predefined characters array
-    preCharPos--;
+    // Save the custom character
     // TODO
     // Stay at the same program state
     state = TEM;
   } else if (re0_cnt > 0) {
     re0_reset();
-    // Scroll forwards in custom characters array
-    customCharPos++;
+    // Clear the custom character
     // TODO
     // Stay at the same program state
     state = TEM;

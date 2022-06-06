@@ -89,11 +89,3 @@ void ADC_Read(byte channel) {
   while (ADCON0bits.GO_DONE == 1)
     ; // Wait for conversion to complete
 }
-//==============================================================================
-// adc_update()
-// updates all fuctions of adc module and returns the value of the adc
-//==============================================================================
-int adc_update(void) {
-  ADC_Read(0);
-  return (ADRESH << 8) + ADRESL;
-}

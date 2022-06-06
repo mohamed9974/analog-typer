@@ -31,10 +31,7 @@
 #pragma config  EBTR5 = OFF, EBTR6 = OFF, EBTR7 = OFF
 #pragma config  EBTRB = OFF
 #pragma config DEBUG = ON
-
-
-typedef unsigned char byte;
-
+// #include <xc.h>
 
 #endif	/* _INCLUDES_H_ */
 

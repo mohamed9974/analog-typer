@@ -1,5 +1,4 @@
 #include "header.h"
-#include "lcd.h"
 #include <stdint.h>
 
 typedef enum { TMR_IDLE, TMR_RUN, TMR_DONE } tmr_state_t;
@@ -7,7 +6,6 @@ typedef enum { BTN_IDLE, BTN_PRESSED, BTN_RELEASED } btn_state_t;
 typedef enum { INIT, TEM, CDM, TSM } state_t;
 
 uint8_t customCharPos;
-uint8_t preCharPos;
 uint8_t customCharCount;
 tmr_state_t t_state;
 btn_state_t b_state;
@@ -187,8 +185,7 @@ uint8_t re2_cnt = 0; // Current count for RE0 input
 uint8_t re3_cnt = 0; // Current count for RE0 input
 uint8_t re4_cnt = 0; // Current count for RE0 input
 uint8_t re5_cnt = 0; // Current count for RE0 input
-uint8_t re0_btn_st = 0, re1_btn_st = 0, re2_btn_st = 0, re3_btn_st = 0,
-        re4_btn_st = 0, re5_btn_st = 0; // Button state
+uint8_t re0_btn_st = 0, re1_btn_st = 0 , re2_btn_st = 0, re3_btn_st = 0, re4_btn_st = 0, re5_btn_st = 0; // Button state
 
 // This function resets the counter for RE0 input
 void re0_reset() { re0_cnt = 0; }
@@ -212,41 +209,41 @@ void button_pressing() {
     re0_btn_st = 0;
     re0_cnt++;
   }
-  if (PORTEbits.RE1)
-    re1_btn_st = 1;
-  else if (re1_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re1_btn_st = 0;
-    re1_cnt++;
-  }
-  if (PORTEbits.RE2)
-    re2_btn_st = 1;
-  else if (re2_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re2_btn_st = 0;
-    re2_cnt++;
-  }
-  if (PORTEbits.RE3)
-    re3_btn_st = 1;
-  else if (re3_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re3_btn_st = 0;
-    re3_cnt++;
-  }
-  if (PORTEbits.RE4)
-    re4_btn_st = 1;
-  else if (re4_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re4_btn_st = 0;
-    re4_cnt++;
-  }
-  if (PORTEbits.RE5)
-    re5_btn_st = 1;
-  else if (re5_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re5_btn_st = 0;
-    re5_cnt++;
-  }
+    if (PORTEbits.RE1)
+        re1_btn_st = 1;
+    else if (re1_btn_st == 1) {
+        // A high pulse has been observed on the CONFIGURE input
+        re1_btn_st = 0;
+        re1_cnt++;
+    }
+    if (PORTEbits.RE2)
+        re2_btn_st = 1;
+    else if (re2_btn_st == 1) {
+        // A high pulse has been observed on the CONFIGURE input
+        re2_btn_st = 0;
+        re2_cnt++;
+    }
+    if (PORTEbits.RE3)
+        re3_btn_st = 1;
+    else if (re3_btn_st == 1) {
+        // A high pulse has been observed on the CONFIGURE input
+        re3_btn_st = 0;
+        re3_cnt++;
+    }
+    if (PORTEbits.RE4)
+        re4_btn_st = 1;
+    else if (re4_btn_st == 1) {
+        // A high pulse has been observed on the CONFIGURE input
+        re4_btn_st = 0;
+        re4_cnt++;
+    }
+    if (PORTEbits.RE5)
+        re5_btn_st = 1;
+    else if (re5_btn_st == 1) {
+        // A high pulse has been observed on the CONFIGURE input
+        re5_btn_st = 0;
+        re5_cnt++;
+    }
 }
 //==============================================================================
 // buttons interrupt service routine
@@ -410,76 +407,40 @@ void board_init() {
 //==============================================================================
 void text_entry_mode() {
   // Check the program state
-  button_pressing();
-  // check if the button RE5 is pressed
-  if (re5_cnt > 0) {
-    re5_reset();
-    // Stay at the same program state
-    state = TEM;
-  } else if (re4_cnt > 0) {
-    re4_reset();
-    // Go to the CDM program state
-    state = CDM;
-  } else if (re3_cnt > 0) {
-    re3_reset();
-    // Scroll backwards in custom characters array
-    customCharPos--;
-    // Show the custom character on the LCD
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  } else if (re2_cnt > 0) {
-    re2_reset();
-    // Scroll forwards in predefined characters array
-    preCharPos++;
-    // Show the predefined character on the LCD
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  } else if (re1_cnt > 0) {
-    re1_reset();
-    // Scroll backwards in predefined characters array
-    preCharPos--;
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  } else if (re0_cnt > 0) {
-    re0_reset();
-    // Scroll forwards in custom characters array
-    customCharPos++;
-    // TODO
-    // Stay at the same program state
-    state = TEM;
+  switch (state) {
+  // If the program is in text entry mode
+  case TEM:
+    // check if the button RE5 is pressed
   }
-}
-// ============================================================================
-// Main program routine
-// description: the main program routine will initialize the board, and then
-//              will call the main loop and depending on the state of the
-//              program will call the appropriate function
-// ============================================================================
-void main(void) {
-  board_init();
-  while (1) {
-    switch (state) {
-    case IDLE:
-      // the program hasnt been initizalized yet then wait till it is done.
-      break;
-    case TEM:
-      // the program is in the text entry mode and the user can enter the
-      // text
-      text_entry_mode();
-      break;
-    case CDM:
-      // the program is in the character display mode and the user can
-      // display the text
-      character_display_mode();
-      break;
-    case TSM:
-      // the program is in the text scroll mode and the user can scroll the
-      // text
-      text_scroll_mode();
-      break;
+
+  // ============================================================================
+  // Main program routine
+  // description: the main program routine will initialize the board, and then
+  //              will call the main loop and depending on the state of the
+  //              program will call the appropriate function
+  // ============================================================================
+  void main(void) {
+    board_init();
+    while (1) {
+      switch (state) {
+      case IDLE:
+        // the program hasnt been initizalized yet then wait till it is done.
+        break;
+      case TEM:
+        // the program is in the text entry mode and the user can enter the
+        // text
+        text_entry_mode();
+        break;
+      case CDM:
+        // the program is in the character display mode and the user can
+        // display the text
+        character_display_mode();
+        break;
+      case TSM:
+        // the program is in the text scroll mode and the user can scroll the
+        // text
+        text_scroll_mode();
+        break;
+      }
     }
   }
-}

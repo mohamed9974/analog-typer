@@ -3,8 +3,8 @@
 
 // PIC18F8722 Configuration Bit Settings @ 40MHz
 
-// #include <xc.h>
-// #include <p18cxxx.h>
+#include <xc.h>
+#include <p18cxxx.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -31,10 +31,13 @@
 #pragma config  EBTR5 = OFF, EBTR6 = OFF, EBTR7 = OFF
 #pragma config  EBTRB = OFF
 #pragma config DEBUG = ON
+// #include <xc.h>
 
 
 typedef unsigned char byte;
-
+int segPos ;
+int customCharPos ;
+byte *customChar;
 
 #endif	/* _INCLUDES_H_ */
 

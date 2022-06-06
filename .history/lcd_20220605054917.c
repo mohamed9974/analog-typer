@@ -94,7 +94,3 @@ void LcdPrintInt(int num){
     sprintf(buf, "%d", num);
     LcdPrint(buf);
 }
-
-void lcd_update() {
-    // Updates the current state of the LCD. from values to blinking characters and to string wraping
-}

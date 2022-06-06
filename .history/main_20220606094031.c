@@ -1,5 +1,4 @@
 #include "header.h"
-#include "lcd.h"
 #include <stdint.h>
 
 typedef enum { TMR_IDLE, TMR_RUN, TMR_DONE } tmr_state_t;
@@ -7,7 +6,6 @@ typedef enum { BTN_IDLE, BTN_PRESSED, BTN_RELEASED } btn_state_t;
 typedef enum { INIT, TEM, CDM, TSM } state_t;
 
 uint8_t customCharPos;
-uint8_t preCharPos;
 uint8_t customCharCount;
 tmr_state_t t_state;
 btn_state_t b_state;
@@ -179,75 +177,33 @@ void buttons_init() {
 }
 // ============================================================================
 // ************* Input task and functions ****************
-// The "input task" monitors RE[0-5] and increments associated counters
+// The "input task" monitors RE[0-4] and increments associated counters 
 // whenever a high pulse is observed (i.e. HIGH followed by a LOW).
-uint8_t re0_cnt = 0; // Current count for RE0 input
-uint8_t re1_cnt = 0; // Current count for RE0 input
-uint8_t re2_cnt = 0; // Current count for RE0 input
-uint8_t re3_cnt = 0; // Current count for RE0 input
-uint8_t re4_cnt = 0; // Current count for RE0 input
-uint8_t re5_cnt = 0; // Current count for RE0 input
-uint8_t re0_btn_st = 0, re1_btn_st = 0, re2_btn_st = 0, re3_btn_st = 0,
-        re4_btn_st = 0, re5_btn_st = 0; // Button state
+uint8_t inp_config_cnt = 0; // Current count for CONFIGURE input(i.e. RA4)
+uint8_t inp_port_cnt = 0;   // Current count for PORT SELECT input (i.e. RE4)
+uint8_t inp_config_btn_st = 0, inp_port_btn_st = 0;
 
-// This function resets the counter for RE0 input
-void re0_reset() { re0_cnt = 0; }
-// This function resets the counter for RE1 input
-void re1_reset() { re1_cnt = 0; }
-// This function resets the counter for RE2 input
-void re2_reset() { re2_cnt = 0; }
-// This function resets the counter for RE3 input
-void re3_reset() { re3_cnt = 0; }
-// This function resets the counter for RE4 input
-void re4_reset() { re4_cnt = 0; }
-// This function resets the counter for RE5 input
-void re5_reset() { re5_cnt = 0; }
+// This function resets the counter for PORT SELECT input 
+void inp_port_reset() { inp_port_cnt = 0; }
+// This function resets the counter for CONFIGURE input
+void inp_config_reset() { inp_config_cnt = 0; }
 
 // This is the input task function
-void button_pressing() {
-  if (PORTEbits.RE0)
-    re0_btn_st = 1;
-  else if (re0_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re0_btn_st = 0;
-    re0_cnt++;
-  }
-  if (PORTEbits.RE1)
-    re1_btn_st = 1;
-  else if (re1_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re1_btn_st = 0;
-    re1_cnt++;
-  }
-  if (PORTEbits.RE2)
-    re2_btn_st = 1;
-  else if (re2_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re2_btn_st = 0;
-    re2_cnt++;
-  }
-  if (PORTEbits.RE3)
-    re3_btn_st = 1;
-  else if (re3_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re3_btn_st = 0;
-    re3_cnt++;
-  }
-  if (PORTEbits.RE4)
-    re4_btn_st = 1;
-  else if (re4_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re4_btn_st = 0;
-    re4_cnt++;
-  }
-  if (PORTEbits.RE5)
-    re5_btn_st = 1;
-  else if (re5_btn_st == 1) {
-    // A high pulse has been observed on the CONFIGURE input
-    re5_btn_st = 0;
-    re5_cnt++;
-  }
+void input_task() {
+    if (PORTEbits.RE4) inp_port_btn_st = 1;
+    else if (inp_port_btn_st == 1) {
+        // A high pulse has been observed on the PORT input
+        inp_port_btn_st = 0;
+        inp_port_cnt++;
+    }
+    if (PORTAbits.RA4) inp_config_btn_st = 1;
+    else if (inp_config_btn_st == 1) {
+        // A high pulse has been observed on the CONFIGURE input
+        inp_config_btn_st = 0;
+        inp_config_cnt++;
+    }
 }
+
 //==============================================================================
 // buttons interrupt service routine
 // Buttons used:
@@ -410,48 +366,14 @@ void board_init() {
 //==============================================================================
 void text_entry_mode() {
   // Check the program state
-  button_pressing();
-  // check if the button RE5 is pressed
-  if (re5_cnt > 0) {
-    re5_reset();
-    // Stay at the same program state
-    state = TEM;
-  } else if (re4_cnt > 0) {
-    re4_reset();
-    // Go to the CDM program state
-    state = CDM;
-  } else if (re3_cnt > 0) {
-    re3_reset();
-    // Scroll backwards in custom characters array
-    customCharPos--;
-    // Show the custom character on the LCD
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  } else if (re2_cnt > 0) {
-    re2_reset();
-    // Scroll forwards in predefined characters array
-    preCharPos++;
-    // Show the predefined character on the LCD
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  } else if (re1_cnt > 0) {
-    re1_reset();
-    // Scroll backwards in predefined characters array
-    preCharPos--;
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  } else if (re0_cnt > 0) {
-    re0_reset();
-    // Scroll forwards in custom characters array
-    customCharPos++;
-    // TODO
-    // Stay at the same program state
-    state = TEM;
-  }
+  switch (state) {
+  // If the program is in text entry mode
+  case TEM:
+    // check if the button RE5 is pressed
+    
 }
+
+
 // ============================================================================
 // Main program routine
 // description: the main program routine will initialize the board, and then

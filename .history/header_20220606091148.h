@@ -63,9 +63,9 @@ void buttons_init();
 void buttons_isr();
 void buttons_init_interrupt();
 void buttons_update();
-void button_pressing();
 
 void init_globals(void);
+void buttons_init() ;
 void clrf_ports(void);
 void Initialize_Ports(void);
 
@@ -75,18 +75,11 @@ void board_init(void);
 //==============================================================================
 // 2. Text entry mode
 //==============================================================================
-// The text entry mode is activated by pressing the button on the board.n this state,
-// the user is able to move the cursor around the first line of the LCD using the potentiometer.
-// To change the text at the cursor’s position, the user will use the RE2 and RE1 buttons
-// single press of the RE2 button will cycle the displayed character through the set of predefined
-// characters in the forward direction. And pressing the RE1 button will cycle the displayed
-// character in the backward direction
+// The text entry mode is activated by pressing the button on the board. The
+// text entry mode is activated by pressing the button on the board. The text
+// entry mode is activated by pressing the button on the board. The text entry
+// mode is activated by pressing the button on the board.
 // ==============================================================================
-// Text entry mode functions:
-// void text_entry_mode(void);
-// void text_entry_mode_update(void);
-// void text_entry_mode_update_cursor(void);
-
 // ==============================================================================
 // 3. Custom character definition mode
 //==============================================================================
