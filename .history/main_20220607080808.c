@@ -8,18 +8,13 @@ typedef enum { INIT, TEM, CDM, TSM } state_t;
 
 uint8_t customCharPos;
 uint8_t preCharPos;
-uint8_t customCharCount = 0;
+uint8_t customCharCount;
 uint8_t adcReading;
-uint8_t custom_Char_pos_seg[2];
-byte led_grid[4] = {0x00, 0x00, 0x00, 0x00};
 tmr_state_t t_state;
 btn_state_t b_state;
 state_t state;
 uint8_t timer_count;
-byte customChar[8][4] = {{0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
-                         {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
-                         {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
-                         {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00}};
+byte customChar[8];
 
 //==============================================================================
 // Initialize global variables
@@ -31,12 +26,7 @@ void init_globals(void) {
   customCharPos = 0;
   customCharCount = 0;
   timer_count = 0;
-  // allocate memorey for customChar[8][4]
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 4; j++) {
-      customChar[i][j] = 0x00;
-    }
-  }
+  customChar = (byte *)malloc(sizeof(byte) * 8);
 }
 //==============================================================================
 // Initiazlize the Ports
@@ -178,6 +168,16 @@ void timer_update() {
     break;
   }
 }
+// Initialize the buttons on port E RE0-RE4
+// Buttons used:
+// RE0 - RE4
+//==============================================================================
+void buttons_init() {
+  // Set the port E to be input
+  TRISE = 0xFF;
+  // Clear the port E latches
+  LATE = 0x00;
+}
 // ============================================================================
 // ************* Input task and functions ****************
 //==============================================================================
@@ -204,19 +204,6 @@ void re3_reset() { re3_cnt = 0; }
 void re4_reset() { re4_cnt = 0; }
 // This function resets the counter for RE5 input
 void re5_reset() { re5_cnt = 0; }
-//==============================================================================
-// ************************ buttons_init_interrupt *****************************
-//==============================================================================
-// Initialize the buttons on port E RE0-RE4
-// Buttons used:
-// RE0 - RE4
-//==============================================================================
-void buttons_init() {
-  // Set the port E to be input
-  TRISE = 0xFF;
-  // Clear the port E latches
-  LATE = 0x00;
-}
 
 // This is the input task function
 void button_pressing() {
@@ -301,7 +288,24 @@ void buttons_isr() {
     break;
   }
 }
-
+//==============================================================================
+// ************************ buttons_init_interrupt *****************************
+//==============================================================================
+void buttons_init_interrupt() {
+  // Set the interrupt priority
+  RCONbits.IPEN = 1;
+  // Set the interrupt priority
+  INTCON2bits.TMR0IP = 1;
+  // Set the interrupt priority
+  INTCON2bits.INTEDG0 = 0;
+  // Clear the interrupt flags
+  INTCONbits.INT0IF = 0;
+  INTCONbits.TMR0IF = 0;
+  // Enable the interrupt
+  INTCONbits.INT0IE = 1;
+  // Enable the timer
+  T0CONbits.TMR0ON = 1;
+}
 //==============================================================================
 // **************************** buttons_update *********************************
 //==============================================================================
@@ -361,14 +365,14 @@ ISR(TIMER1_COMPA_vect) {
   button_isr();
 
   // Update the leds
-  leds_grid_update();
+  leds_update();
 
   // Update the seven segment display
   UpdateSevenSeg(customCharCount, customCharPos);
 }
 //==============================================================================
 // ************************** Interrupt Handler ********************************
-//==============================================================================
+//============================================================================== 
 void __interrupt() ISR_Handler() {
   // Check if the interrupt is from the timer
   if (INTCONbits.TMR0IF) {
@@ -434,51 +438,37 @@ void text_entry_mode() {
   // Check the program state
   button_pressing();
   LcdSetCursor(1, adcReading)
-      // check if the button RE5 is pressed
-      if (re5_cnt > 0) {
+  // check if the button RE5 is pressed
+  if (re5_cnt > 0) {
     re5_reset();
     // Stay at the same program state
     state = TSM;
-  }
-  else if (re4_cnt > 0) {
+  } else if (re4_cnt > 0) {
     re4_reset();
     // Go to the CDM program state
-    cdm_State_init();
     state = CDM;
-  }
-  else if (re3_cnt > 0) {
+  } else if (re3_cnt > 0) {
     re3_reset();
     // Scroll backwards in custom characters array
-    if (customCharPos > 0) {
-      customCharPos--;
-    } else {
-      customCharPos = 7;
-    }
+    customCharPos--;
     // Show the custom character on the LCD
     LcdPrint(customChar[customCharPos]);
-  }
-  else if (re2_cnt > 0) {
+  } else if (re2_cnt > 0) {
     re2_reset();
     // Scroll forwards in predefined characters array
-    if (preCharPos < (sizeof(preChar) - 1)) {
-      preCharPos++;
-    } else {
-      preCharPos = 0;
-    }
+    preCharPos++;
     // Show the predefined character on the LCD
-    LcdPrint(PREDEFINED[preCharPos]);
-  }
-  else if (re1_cnt > 0) {
+    LcdPrint(preChar[preCharPos]);
+  } else if (re1_cnt > 0) {
     re1_reset();
     // Scroll backwards in predefined characters array
     if (preCharPos > 0) {
       preCharPos--;
-    } else {
-      preCharPos = PREDEFINED.length - 1;
+    }else {
+      preCharPos =  PREDEFINED.length - 1;
     }
     LcdPrint(PREDEFINED[preCharPos]);
-  }
-  else if (re0_cnt > 0) {
+  } else if (re0_cnt > 0) {
     re0_reset();
     // Scroll forwards in custom characters array
     if (customCharPos < 7) {
@@ -498,177 +488,8 @@ void text_entry_mode() {
 //==============================================================================
 // **********************Custom character mode routine**************************
 //==============================================================================
-// initialize custom character mode rountine
-void cdm_State_init() {
-  // init PORTA, PORTB, PORTC, PORTD as outputs
-  TRISA = 0x00;
-  TRISB = 0x00;
-  TRISC = 0x00;
-  TRISD = 0x00;
-  // Clear Ports
-  PORTA = 0x00;
-  PORTB = 0x00;
-  PORTC = 0x00;
-  PORTD = 0x00;
-  // button init
-  buttons_init();
-  // turn off the ADC module
-  adc_stop();
-  // clear the LCD
-  lcd_clear();
-  // init the seven segment display
-  InitSevenSeg();
-  // set the custom character position to 0
-  custom_Char_pos_seg[0] = 0;
-  custom_Char_pos_seg[1] = 0;
-  // set the program state to CDM
-  state = CDM;
-  // Set LCD cursor to the first character
-  LcdSetCursor(0, 0);
-  // Display the custom character on the LCD
-  LcdPrint(customChar[customCharCount]);
-  // Display the custom character position and count on the seven segment
-  // display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
 
-void move_cursor_up() {
-  if (custom_Char_pos_seg[1] == 0) {
-    custom_Char_pos_seg[1] = 7;
-  } else {
-    custom_Char_pos_seg[1]--;
-  }
 
-  // light up the correct LED
-  leds_grid_update();
-  LcdPrint(customChar[customCharCount]);
-  // Display the custom character position and count on the seven segment
-  // display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
-void move_cursor_down() {
-  if (custom_Char_pos_seg[1] == 7) {
-    custom_Char_pos_seg[1] = 0;
-  } else {
-    custom_Char_pos_seg[1]++;
-  }
-  // light up the correct LED
-  leds_grid_update();
-  LcdPrint(customChar[customCharCount]);
-  // Display the custom character position and count on the seven segment
-  // display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
-
-void move_cursor_left() {
-  if (custom_Char_pos_seg[0] == 0) {
-    custom_Char_pos_seg[0] = 4;
-  } else {
-    custom_Char_pos_seg[0]--;
-  }
-  // light up the correct LED
-  leds_grid_update();
-  LcdPrint(customChar[customCharCount]);
-  // Display the custom character position and count on the seven segment
-  // display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
-
-void move_cursor_right() {
-  if (custom_Char_pos_seg[0] == 4) {
-    custom_Char_pos_seg[0] = 0;
-  } else {
-    custom_Char_pos_seg[0]++;
-  }
-  // light up the correct LED
-  leds_grid_update();
-  LcdPrint(customChar[customCharCount]);
-  // Display the custom character position and count on the seven segment
-  // display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
-
-void confirm_selection() {
-  led_grid[custom_Char_pos_seg[0]] = (0b00000001) << custom_Char_pos_seg[1];
-  // light up the correct LED
-  // add the custom character array
-  customChar[customCharCount] = led_grid;
-  // increment the custom character count
-  customCharCount++;
-  // reset the custom character position
-  custom_Char_pos_seg[0] = 0;
-  custom_Char_pos_seg[1] = 0;
-
-  leds_grid_update();
-  // update the LCD
-  // Set the LCD cursor to the first character
-  LcdSetCursor(0, 0);
-  // Display the custom character on the LCD
-  LcdPrint(customChar[customCharCount]);
-  // update the seven segment display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
-
-void leds_grid_update() {
-  // set up the values of led_grid to PORTA, PORTB, PORTC, PORTD
-  // PORTA
-  PORTA = 0x00;
-  // PORTB
-  PORTB = 0x00;
-  // PORTC
-  PORTC = 0x00;
-  // PORTD
-  PORTD = 0x00;
-  // PORTA
-  PORTA = led_grid[0];
-  // PORTB
-  PORTB = led_grid[1];
-  // PORTC
-  PORTC = led_grid[2];
-  // PORTD
-  PORTD = led_grid[3];
-}
-
-void custom_character_definition_mode() {
-  // we are in custom character definition mode
-  // check if the user has pressed the up button
-  button_pressing();
-  if (re3_cnt > 0) {
-    re3_reset();
-    move_cursor_up();
-  }
-  // check if the user has pressed the down button
-  if (re2_cnt > 0) {
-    re2_reset();
-    move_cursor_down();
-  }
-  // check if the user has pressed the left button
-  if (re1_cnt > 0) {
-    re1_reset();
-    move_cursor_left();
-  }
-  // check if the user has pressed the right button
-  if (re0_cnt > 0) {
-    re0_reset();
-    move_cursor_right();
-  }
-  // check if the user has pressed the confirm button
-  if (re4_cnt > 0) {
-    re4_reset();
-    confirm_selection();
-  }
-  // check if the user has pressed the back button
-  if (re5_cnt > 0) {
-    re5_reset();
-    state = TEM;
-  }
-}
 
 //==============================================================================
 // ============================================================================

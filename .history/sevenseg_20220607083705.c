@@ -19,7 +19,7 @@ void InitSevenSeg(void){
     LATH = 0x00;
     LATJ = 0x00;
     ClearSevenSeg();
-    DisplaySevenSeg(0,0,0);
+    DisplaySevenSeg(0,0);
 }
 
 //==============================================================================

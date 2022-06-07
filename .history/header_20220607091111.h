@@ -61,6 +61,7 @@ void timer_update(void);
 
 void buttons_init();
 void buttons_isr();
+void buttons_init_interrupt();
 void buttons_update();
 void button_pressing();
 

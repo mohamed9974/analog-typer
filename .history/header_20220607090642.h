@@ -61,6 +61,7 @@ void timer_update(void);
 
 void buttons_init();
 void buttons_isr();
+void buttons_init_interrupt();
 void buttons_update();
 void button_pressing();
 
@@ -107,7 +108,6 @@ void save_text(void); //TODO
 // RE5 button to go back into the TEM. 
 //==============================================================================
 // Custom character definition mode functions:
-void leds_grid_update(void);
 void cdm_State_init(void);
 void custom_character_definition_mode(void);
 void move_cursor_up(void); // RE2

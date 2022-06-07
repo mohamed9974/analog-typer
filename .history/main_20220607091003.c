@@ -31,12 +31,7 @@ void init_globals(void) {
   customCharPos = 0;
   customCharCount = 0;
   timer_count = 0;
-  // allocate memorey for customChar[8][4]
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 4; j++) {
-      customChar[i][j] = 0x00;
-    }
-  }
+  customChar = (byte *)malloc(sizeof(byte) * 8);
 }
 //==============================================================================
 // Initiazlize the Ports
@@ -178,6 +173,16 @@ void timer_update() {
     break;
   }
 }
+// Initialize the buttons on port E RE0-RE4
+// Buttons used:
+// RE0 - RE4
+//==============================================================================
+void buttons_init() {
+  // Set the port E to be input
+  TRISE = 0xFF;
+  // Clear the port E latches
+  LATE = 0x00;
+}
 // ============================================================================
 // ************* Input task and functions ****************
 //==============================================================================
@@ -204,19 +209,6 @@ void re3_reset() { re3_cnt = 0; }
 void re4_reset() { re4_cnt = 0; }
 // This function resets the counter for RE5 input
 void re5_reset() { re5_cnt = 0; }
-//==============================================================================
-// ************************ buttons_init_interrupt *****************************
-//==============================================================================
-// Initialize the buttons on port E RE0-RE4
-// Buttons used:
-// RE0 - RE4
-//==============================================================================
-void buttons_init() {
-  // Set the port E to be input
-  TRISE = 0xFF;
-  // Clear the port E latches
-  LATE = 0x00;
-}
 
 // This is the input task function
 void button_pressing() {
@@ -301,7 +293,24 @@ void buttons_isr() {
     break;
   }
 }
-
+//==============================================================================
+// ************************ buttons_init_interrupt *****************************
+//==============================================================================
+void buttons_init_interrupt() {
+  // Set the interrupt priority
+  RCONbits.IPEN = 1;
+  // Set the interrupt priority
+  INTCON2bits.TMR0IP = 1;
+  // Set the interrupt priority
+  INTCON2bits.INTEDG0 = 0;
+  // Clear the interrupt flags
+  INTCONbits.INT0IF = 0;
+  INTCONbits.TMR0IF = 0;
+  // Enable the interrupt
+  INTCONbits.INT0IE = 1;
+  // Enable the timer
+  T0CONbits.TMR0ON = 1;
+}
 //==============================================================================
 // **************************** buttons_update *********************************
 //==============================================================================
@@ -510,8 +519,6 @@ void cdm_State_init() {
   PORTB = 0x00;
   PORTC = 0x00;
   PORTD = 0x00;
-  // button init
-  buttons_init();
   // turn off the ADC module
   adc_stop();
   // clear the LCD
@@ -635,40 +642,7 @@ void leds_grid_update() {
   PORTD = led_grid[3];
 }
 
-void custom_character_definition_mode() {
-  // we are in custom character definition mode
-  // check if the user has pressed the up button
-  button_pressing();
-  if (re3_cnt > 0) {
-    re3_reset();
-    move_cursor_up();
-  }
-  // check if the user has pressed the down button
-  if (re2_cnt > 0) {
-    re2_reset();
-    move_cursor_down();
-  }
-  // check if the user has pressed the left button
-  if (re1_cnt > 0) {
-    re1_reset();
-    move_cursor_left();
-  }
-  // check if the user has pressed the right button
-  if (re0_cnt > 0) {
-    re0_reset();
-    move_cursor_right();
-  }
-  // check if the user has pressed the confirm button
-  if (re4_cnt > 0) {
-    re4_reset();
-    confirm_selection();
-  }
-  // check if the user has pressed the back button
-  if (re5_cnt > 0) {
-    re5_reset();
-    state = TEM;
-  }
-}
+// TODO set the customer count to pos
 
 //==============================================================================
 // ============================================================================

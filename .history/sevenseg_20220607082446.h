@@ -31,12 +31,12 @@ volatile uint8_t SSEGMENT_NUMBERS_GLYPHS[] = {
 void InitSevenSeg(void);
 
 // display a number on the 7-segment display
-void DisplaySevenSeg(uint8_t number, uint8_t custom_char_pos_x, uint8_t custom_char_pos_y);
+void DisplaySevenSeg(uint8_t number, uint8_t custom_char_pos);
 
 // clear the 7-segment display
 void ClearSevenSeg(void);
 
 // update the 7-segment display
-void UpdateSevenSeg(uint8_t, uint8_t, uint8_t);
+void UpdateSevenSeg(uint8_t,uint8_t);
 
 #endif

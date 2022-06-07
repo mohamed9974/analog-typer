@@ -19,7 +19,7 @@ void InitSevenSeg(void){
     LATH = 0x00;
     LATJ = 0x00;
     ClearSevenSeg();
-    DisplaySevenSeg(0,0,0);
+    DisplaySevenSeg(0,0);
 }
 
 //==============================================================================
@@ -29,7 +29,7 @@ void InitSevenSeg(void){
 // pos: the position of the character to be displayed
 // segPos: which 7-segment of the 4 to be displayed
 //==============================================================================
-void DisplaySevenSeg(uint8_t number, uint8_t custom_char_pos_x, uint8_t custom_char_pos_y){
+void DisplaySevenSeg(uint8_t number, uint8_t custom_char_pos){
     segPos = segPos % 4;
     LATH = (0b00000001) << segPos;
     switch (segPos) {
@@ -42,11 +42,11 @@ void DisplaySevenSeg(uint8_t number, uint8_t custom_char_pos_x, uint8_t custom_c
             break;
         case 2:
             // get the tenths digit of custom_char_pos
-            LATJ = SSEGMENT_NUMBERS_GLYPHS[custom_char_pos_x];
+            LATJ = SSEGMENT_NUMBERS_GLYPHS[custom_char_pos / 10];
             break;
         case 3:
             // get the ones digit of custom_char_pos
-            LATJ = SSEGMENT_NUMBERS_GLYPHS[custom_char_pos_y];
+            LATJ = SSEGMENT_NUMBERS_GLYPHS[custom_char_pos % 10];
             break;
     }
     segPos++;
@@ -65,9 +65,9 @@ void ClearSevenSeg(void){
 // gets the new values of custome char pos and the number of custom characters 
 // and loops over the h port to display the new values
 //==============================================================================
-void UpdateSevenSeg(uint8_t custom_char_num, uint8_t custom_char_pos_x, uint8_t custom_char_pos_y){
+void UpdateSevenSeg(uint8_t custom_char_num, uint8_t custom_char_pos){
     for (segPos = 0; segPos < 4;) {
-        DisplaySevenSeg(custom_char_num, custom_char_pos_x, custom_char_pos_y);
+        DisplaySevenSeg(custom_char_num, custom_char_pos);
         if (segPos == 3) {
             segPos = 0;
         }

@@ -31,12 +31,8 @@ void init_globals(void) {
   customCharPos = 0;
   customCharCount = 0;
   timer_count = 0;
-  // allocate memorey for customChar[8][4]
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 4; j++) {
-      customChar[i][j] = 0x00;
-    }
-  }
+  for (int i = 0; i < 4; i++) {
+    customChar[i] = (byte*)malloc(sizeof(byte));
 }
 //==============================================================================
 // Initiazlize the Ports

@@ -31,12 +31,7 @@ void init_globals(void) {
   customCharPos = 0;
   customCharCount = 0;
   timer_count = 0;
-  // allocate memorey for customChar[8][4]
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 4; j++) {
-      customChar[i][j] = 0x00;
-    }
-  }
+  customChar = (byte *)malloc(sizeof(byte) * 8);
 }
 //==============================================================================
 // Initiazlize the Ports
@@ -635,14 +630,14 @@ void leds_grid_update() {
   PORTD = led_grid[3];
 }
 
-void custom_character_definition_mode() {
+void custom_character_definition_mode(){
   // we are in custom character definition mode
   // check if the user has pressed the up button
   button_pressing();
   if (re3_cnt > 0) {
     re3_reset();
     move_cursor_up();
-  }
+  } 
   // check if the user has pressed the down button
   if (re2_cnt > 0) {
     re2_reset();

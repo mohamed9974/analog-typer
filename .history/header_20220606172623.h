@@ -61,6 +61,7 @@ void timer_update(void);
 
 void buttons_init();
 void buttons_isr();
+void buttons_init_interrupt();
 void buttons_update();
 void button_pressing();
 
@@ -74,50 +75,29 @@ void board_init(void);
 //==============================================================================
 // 2. Text entry mode
 //==============================================================================
-// The text entry mode is activated by pressing the button on the board.n this
-// state, the user is able to move the cursor around the first line of the LCD
-// using the potentiometer. To change the text at the cursor’s position, the
-// user will use the RE2 and RE1 buttons single press of the RE2 button will
-// cycle the displayed character through the set of predefined characters in the
-// forward direction. And pressing the RE1 button will cycle the displayed
+// The text entry mode is activated by pressing the button on the board.n this state,
+// the user is able to move the cursor around the first line of the LCD using the potentiometer.
+// To change the text at the cursor’s position, the user will use the RE2 and RE1 buttons
+// single press of the RE2 button will cycle the displayed character through the set of predefined
+// characters in the forward direction. And pressing the RE1 button will cycle the displayed
 // character in the backward direction
-// In addition to the ability to insert predefined characters, the user can also
-// insert the custom characters he/she already defined to the cursor’s position.
-// Pressing the RE0 and RE3 buttons will cycle through the defined custom
-// characters RE0 will go forward through the custom characters and RE3 will go
-// backwards
+// In addition to the ability to insert predefined characters, the user can also insert the
+// custom characters he/she already defined to the cursor’s position. Pressing the RE0 and RE3
+// buttons will cycle through the defined custom characters
+// RE0 will go forward through the
+// custom characters and RE3 will go backwards
 // ==============================================================================
 // Text entry mode functions:
+// void text_entry_mode(void);
+// void text_entry_mode_update(void);
+// void text_entry_mode_update_cursor(void);
 // ==============================================================================
-void text_entry_mode(void);
-void save_text(void); //TODO
 // 3. Custom character definition mode
 //==============================================================================
 // The custom character definition mode is activated by pressing the
 // button on the board. and using the LED grid. The custom character definition
-// mode is activated.he user will use the R[ABCD][0-7] LEDs to enter a
-// custom character. Each cell in the LCD is a 5x8 dot matrix and each LED
-// corresponds to a single dot in the LCD cell. The user will use
-// the RE4 button to turn on/off the LEDs
-// the user will use the RE2, RE1, RE3, and RE0 buttons to move an invisible
-// cursor up, down, left, and right over the LEDs, respectively.
-// Meanwhile the cursor’s coordinates will be displayed in the
-// seven-segment display.
-// After entering a custom character by turning LEDs on and off, the user will press the
-// RE5 button to go back into the TEM. 
+// mode is activated
 //==============================================================================
-// Custom character definition mode functions:
-void leds_grid_update(void);
-void cdm_State_init(void);
-void custom_character_definition_mode(void);
-void move_cursor_up(void); // RE2
-void move_cursor_down(void); // RE1
-void move_cursor_left(void); // RE3
-void move_cursor_right(void); // RE0
-void confirm_selection(void); // RE4
-
-//TODO led_grid_update();
-
 //==============================================================================
 // 4. Infinite scrolling mode (Text Scroll Mode)
 //==============================================================================

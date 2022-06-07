@@ -19,7 +19,7 @@ void InitSevenSeg(void){
     LATH = 0x00;
     LATJ = 0x00;
     ClearSevenSeg();
-    DisplaySevenSeg(0,0,0);
+    DisplaySevenSeg(0,0);
 }
 
 //==============================================================================
@@ -67,7 +67,7 @@ void ClearSevenSeg(void){
 //==============================================================================
 void UpdateSevenSeg(uint8_t custom_char_num, uint8_t custom_char_pos_x, uint8_t custom_char_pos_y){
     for (segPos = 0; segPos < 4;) {
-        DisplaySevenSeg(custom_char_num, custom_char_pos_x, custom_char_pos_y);
+        DisplaySevenSeg(custom_char_num, custom_char_pos);
         if (segPos == 3) {
             segPos = 0;
         }
