@@ -70,7 +70,7 @@ void Initialize_Ports() {
   // initialize the port C to be output for the LEDs
   TRISC = 0x00;
   // initialize the port E to be output for the control buttons
-  TRISE = 0x00;
+  TRISE = 0xFF;
   // Clear port C and E latches
   clrf_ports();
 }
@@ -78,7 +78,7 @@ void Initialize_Ports() {
 void clrf_ports() {
   // Clear the port C and E latches
   LATC = 0x00;
-  LATE = 0x00;
+  PORTE = 0x00;
 }
 //==============================================================================
 /********************** Timer task and fuctions *******************************/
