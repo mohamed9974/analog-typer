@@ -11,7 +11,7 @@ uint8_t preCharPos;
 uint8_t customCharCount = 0;
 uint8_t adcReading;
 uint8_t custom_Char_pos_seg[2];
-char text_str[16] = {'\0'};
+char text_str[16]={'\0'};
 byte led_grid[4] = {0x00, 0x00, 0x00, 0x00};
 tmr_state_t t_state;
 btn_state_t b_state;
@@ -472,6 +472,7 @@ void text_entry_mode() {
     LcdPrint(PREDEFINED[preCharPos]);
     // Saves the charater in the text_string using the position of the cursor
     text_str[adcReading] = PREDEFINED[preCharPos];
+
   }
   else if (re1_cnt > 0) {
     re1_reset();
@@ -483,7 +484,7 @@ void text_entry_mode() {
     }
     LcdPrint(PREDEFINED[preCharPos]);
     // Saves the charater in the text_string using the position of the cursor
-    text_str[adcReading] = PREDEFINED[preCharPos];
+    text_str[adcReading]=PREDEFINED[preCharPos];
   }
   else if (re0_cnt > 0) {
     re0_reset();
@@ -495,7 +496,7 @@ void text_entry_mode() {
     }
     LcdPrint(customChar[customCharPos]);
     // Saves the charater in the text_string using the position of the cursor
-    text_str[adcReading] = customChar[customCharPos];
+    text_str[adcReading]=customChar[customCharPos];
   }
   if (re3_cnt > 0 || re2_cnt > 0 || re1_cnt > 0 || re0_cnt > 0) {
     // stay in the same program state
@@ -703,39 +704,19 @@ void custom_character_definition_mode() {
 // start of text scrolling mode
 // ********************* TEXT SCROLLING MODE **********************************
 //==============================================================================
-void text_scroll_mode() {
+void text_scrolling_mode_init() {
   // init the seven segment display
   InitSevenSeg();
   // set the program state to TSM
   state = TSM;
-  UpdateSevenSeg(customCharCount, 0, 0);
-  // turn off all the LEDs
-  led_grid[0] = 0x00;
-  led_grid[1] = 0x00;
-  led_grid[2] = 0x00;
-  led_grid[3] = 0x00;
-  // set up the values of led_grid to PORTA, PORTB, PORTC, PORTD
-  // PORTA
-  PORTA = 0x00;
-  // PORTB
-  PORTC = 0x00;
-  // PORTC
-  PORTD = 0x00;
-  // PORTD
-  PORTB = 0x00;
-  // turn off all the LEDs
-  leds_grid_update();
-
-  // init the LCD
-  LcdInit();
-  // clear the LCD
-  LcdClear();
   // Set LCD cursor to the first character
   LcdSetCursor(0, 0);
   // Display the custom character on the LCD
-  LcdPrintFirstRow("   finished     ");
-  LcdSetCursor(1, 0);
-  LcdPrintSecondRow(text_str);
+  LcdPrintAll("   finished     ");
+  // Display the custom character position and count on the seven segment
+  // display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
 }
 // ============================================================================
 // Main program routine

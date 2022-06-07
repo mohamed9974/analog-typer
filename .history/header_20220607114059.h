@@ -117,6 +117,7 @@ void move_cursor_left(void);  // RE3
 void move_cursor_right(void); // RE0
 void confirm_selection(void); // RE4
 
+// TODO led_grid_update();
 
 //==============================================================================
 // 4. text scrolling mode (Text Scroll Mode)
@@ -128,7 +129,8 @@ void confirm_selection(void); // RE4
 // until the board has been reset
 //==============================================================================
 // text scrolling mode functions:
-void text_scroll_mode(void);
+void text_scrolling_mode(void);
+void text_scrolling_mode_init(void);
 
 
 #endif

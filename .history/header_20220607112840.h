@@ -16,7 +16,7 @@
 // to insert a character. By using the buttons on the board, the user can select
 // a character from the predefined set of characters ([a-z0-9]) or he can insert
 // a custom character he defines using the LEDs. When the user is done with the
-// text entry, the text will scroll on the LCD inifintly. When the user wants
+// text entry, the text will scroll on the LCD infinitely. When the user wants
 // to define a custom character, he will go into the custom character definition
 // (CCD) mode. In this mode, the user will turn on and off LEDs in a 4x8 LED
 // grid on the board. To move around this grid the user will use an invisible
@@ -32,7 +32,7 @@
 // 1. Initial configuration of the LCD and the ADC module
 // 2. Text entry mode
 // 3. Custom character definition mode
-// 4. text scrolling mode
+// 4. Infinite scrolling mode
 //==============================================================================
 //==============================================================================
 // 1. Initial configuration of the LCD and the ADC module
@@ -91,7 +91,7 @@ void board_init(void);
 // ==============================================================================
 void text_entry_mode_init(void);
 void text_entry_mode(void);
-//TODO add the custom characters to the  text entry mode
+void save_text(void); //TODO
 // 3. Custom character definition mode
 //==============================================================================
 // The custom character definition mode is activated by pressing the
@@ -104,31 +104,25 @@ void text_entry_mode(void);
 // cursor up, down, left, and right over the LEDs, respectively.
 // Meanwhile the cursor’s coordinates will be displayed in the
 // seven-segment display.
-// After entering a custom character by turning LEDs on and off, the user will
-// press the RE5 button to go back into the TEM.
+// After entering a custom character by turning LEDs on and off, the user will press the
+// RE5 button to go back into the TEM. 
 //==============================================================================
 // Custom character definition mode functions:
 void leds_grid_update(void);
 void cdm_State_init(void);
 void custom_character_definition_mode(void);
-void move_cursor_up(void);    // RE2
-void move_cursor_down(void);  // RE1
-void move_cursor_left(void);  // RE3
+void move_cursor_up(void); // RE2
+void move_cursor_down(void); // RE1
+void move_cursor_left(void); // RE3
 void move_cursor_right(void); // RE0
 void confirm_selection(void); // RE4
 
+//TODO led_grid_update();
 
 //==============================================================================
-// 4. text scrolling mode (Text Scroll Mode)
+// 4. Infinite scrolling mode (Text Scroll Mode)
 //==============================================================================
-// In Text Scroll Mode (TSM), the text entered by the user will start to scroll
-// on the second line of the LCD. Meanwhile there will be a static “finished”
-// text on the first line.  The cursor on the LCD will also disappear. At this
-// mode no inputs will be accepted, and the program will stay in this state
-// until the board has been reset
-//==============================================================================
-// text scrolling mode functions:
-void text_scroll_mode(void);
-
+// The infinite scrolling mode is activated by pressing the button on the board.
+// The infinite scrolling mode is activated by pressing the button on the board.
 
 #endif

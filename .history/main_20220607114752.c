@@ -703,39 +703,17 @@ void custom_character_definition_mode() {
 // start of text scrolling mode
 // ********************* TEXT SCROLLING MODE **********************************
 //==============================================================================
-void text_scroll_mode() {
+void text_scrolling_mode_init() {
   // init the seven segment display
   InitSevenSeg();
   // set the program state to TSM
   state = TSM;
-  UpdateSevenSeg(customCharCount, 0, 0);
-  // turn off all the LEDs
-  led_grid[0] = 0x00;
-  led_grid[1] = 0x00;
-  led_grid[2] = 0x00;
-  led_grid[3] = 0x00;
-  // set up the values of led_grid to PORTA, PORTB, PORTC, PORTD
-  // PORTA
-  PORTA = 0x00;
-  // PORTB
-  PORTC = 0x00;
-  // PORTC
-  PORTD = 0x00;
-  // PORTD
-  PORTB = 0x00;
-  // turn off all the LEDs
-  leds_grid_update();
-
-  // init the LCD
-  LcdInit();
-  // clear the LCD
-  LcdClear();
   // Set LCD cursor to the first character
   LcdSetCursor(0, 0);
   // Display the custom character on the LCD
   LcdPrintFirstRow("   finished     ");
-  LcdSetCursor(1, 0);
-  LcdPrintSecondRow(text_str);
+  // Display the custom character position and count on the seven segment
+  UpdateSevenSeg(customCharCount, 0, 0);
 }
 // ============================================================================
 // Main program routine

@@ -11,7 +11,7 @@ uint8_t preCharPos;
 uint8_t customCharCount = 0;
 uint8_t adcReading;
 uint8_t custom_Char_pos_seg[2];
-char text_str[16] = {'\0'};
+char text_str[16]={'\0'};
 byte led_grid[4] = {0x00, 0x00, 0x00, 0x00};
 tmr_state_t t_state;
 btn_state_t b_state;
@@ -457,8 +457,6 @@ void text_entry_mode() {
     }
     // Show the custom character on the LCD
     LcdPrint(customChar[customCharPos]);
-    // Saves the charater in the text_string using the position of the cursor
-    text_str[adcReading] = customChar[customCharPos];
   }
   else if (re2_cnt > 0) {
     re2_reset();
@@ -470,8 +468,6 @@ void text_entry_mode() {
     }
     // Show the predefined character on the LCD
     LcdPrint(PREDEFINED[preCharPos]);
-    // Saves the charater in the text_string using the position of the cursor
-    text_str[adcReading] = PREDEFINED[preCharPos];
   }
   else if (re1_cnt > 0) {
     re1_reset();
@@ -482,8 +478,7 @@ void text_entry_mode() {
       preCharPos = PREDEFINED.length - 1;
     }
     LcdPrint(PREDEFINED[preCharPos]);
-    // Saves the charater in the text_string using the position of the cursor
-    text_str[adcReading] = PREDEFINED[preCharPos];
+    text_str[adcReading]=PREDEFINED[preCharPos];
   }
   else if (re0_cnt > 0) {
     re0_reset();
@@ -494,8 +489,6 @@ void text_entry_mode() {
       customCharPos = 0;
     }
     LcdPrint(customChar[customCharPos]);
-    // Saves the charater in the text_string using the position of the cursor
-    text_str[adcReading] = customChar[customCharPos];
   }
   if (re3_cnt > 0 || re2_cnt > 0 || re1_cnt > 0 || re0_cnt > 0) {
     // stay in the same program state
@@ -507,7 +500,7 @@ void text_entry_mode() {
 
 void text_entry_mode_init() {
   // Initialize the LCD
-  lcd_clear();
+  lcd_init();
   // Initialize the ADC
   adc_init();
   // Initialize the buttons
@@ -522,6 +515,20 @@ void text_entry_mode_init() {
   // Set the program state to idle
   state = TEM;
 }
+
+void save_text(){
+  //this fuction saves the last state of every cell in the lcd to the text sting array text_str[16]
+  // the choice of which cell to save is determined by the value of the adcReading variable
+  // the value of the adcReading variable is updated in the text_entry_mode function by the potentiometer
+  // this fuction has nothing to do with the custom character array but uses the predefined character
+  // array to save the last state of the lcd
+  // adcReading is the value of the potentiometer with range [0,16]
+
+  
+
+
+}
+
 //==============================================================================
 // **********************Custom character mode routine**************************
 //==============================================================================
@@ -694,8 +701,6 @@ void custom_character_definition_mode() {
   if (re5_cnt > 0) {
     re5_reset();
     state = TEM;
-    // init text entry mode
-    text_entry_mode_init();
   }
 }
 // end of custom character definition mode
@@ -703,40 +708,7 @@ void custom_character_definition_mode() {
 // start of text scrolling mode
 // ********************* TEXT SCROLLING MODE **********************************
 //==============================================================================
-void text_scroll_mode() {
-  // init the seven segment display
-  InitSevenSeg();
-  // set the program state to TSM
-  state = TSM;
-  UpdateSevenSeg(customCharCount, 0, 0);
-  // turn off all the LEDs
-  led_grid[0] = 0x00;
-  led_grid[1] = 0x00;
-  led_grid[2] = 0x00;
-  led_grid[3] = 0x00;
-  // set up the values of led_grid to PORTA, PORTB, PORTC, PORTD
-  // PORTA
-  PORTA = 0x00;
-  // PORTB
-  PORTC = 0x00;
-  // PORTC
-  PORTD = 0x00;
-  // PORTD
-  PORTB = 0x00;
-  // turn off all the LEDs
-  leds_grid_update();
 
-  // init the LCD
-  LcdInit();
-  // clear the LCD
-  LcdClear();
-  // Set LCD cursor to the first character
-  LcdSetCursor(0, 0);
-  // Display the custom character on the LCD
-  LcdPrintFirstRow("   finished     ");
-  LcdSetCursor(1, 0);
-  LcdPrintSecondRow(text_str);
-}
 // ============================================================================
 // Main program routine
 // description: the main program routine will initialize the board, and then
