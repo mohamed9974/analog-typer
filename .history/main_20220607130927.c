@@ -1,0 +1,711 @@
+#include "header.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+typedef enum { TMR_IDLE, TMR_RUN, TMR_DONE } tmr_state_t;
+typedef enum { BTN_IDLE, BTN_PRESSED, BTN_RELEASED } btn_state_t;
+typedef enum { INIT, TEM, CDM, TSM } state_t;
+
+uint8_t customCharPos;
+uint8_t preCharPos;
+uint8_t customCharCount = 0;
+uint8_t adcReading;
+uint8_t custom_Char_pos_seg[2];
+char text_str[16] = {'\0'};
+uint8_t led_grid[4] = {0, 0, 0, 0};
+tmr_state_t t_state;
+btn_state_t b_state;
+state_t state;
+uint8_t timer_count;
+volatile uint8_t customChar[8][4] = {
+    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00}};
+
+//==============================================================================
+// Initialize global variables
+//==============================================================================
+void init_globals(void) {
+  t_state = TMR_IDLE;
+  b_state = BTN_IDLE;
+  state = INIT;
+  customCharPos = 0;
+  customCharCount = 0;
+  timer_count = 0;
+  // allocate memorey for customChar[8][4]
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 4; j++) {
+      customChar[i][j] = 0x00;
+    }
+  }
+}
+//==============================================================================
+// Initialize the LEDs
+//==============================================================================
+void init_leds(void) {
+  // Set the direction of the LED pins as output
+  PORTA = 0x00;
+  TRISA = 0x00;
+  PORTB = 0x00;
+  TRISB = 0x00;
+  PORTC = 0x00;
+  TRISC = 0x00;
+  PORTD = 0x00;
+  TRISD = 0x00;
+}
+//==============================================================================
+// Initiazlize the Ports
+// Ports used:
+// PORTA, PORTB, PORTC, PORTD, PORTE, PORTH, PORTJ
+// PORT[A-D] are used for the LEDs
+// PORT[B,D] are used for the LCD display (Covered in lcd.c)
+// PORT[E] is used for the control buttons
+// PORT[H-J] are used for the seven segment display (Covered in sevenseg.c)
+// ADC ports are used for the potentiometer (Coverd in adc.c) and uses port A
+// uninitialized ports are PORT C and PORT E
+//==============================================================================
+void Initialize_Ports() {
+  // initialize the port C to be output for the LEDs
+  TRISC = 0x00;
+  // initialize the port E to be output for the control buttons
+  TRISE = 0x00;
+  // Clear port C and E latches
+  clrf_ports();
+}
+//==============================================================================
+void clrf_ports() {
+  // Clear the port C and E latches
+  LATC = 0x00;
+  LATE = 0x00;
+}
+//==============================================================================
+/********************** Timer task and fuctions *******************************/
+//==============================================================================
+// Initialize the timer
+// Timer used: TMR0
+//==============================================================================
+void timer_init() {
+  // Timer 0 is used for the delay functions
+  // Set the TMR0 prescaler to 1:256
+  T0CS = 0;
+  // TMR0 preload value = 61
+  // Freq = 40MHz / (256-61) = 1.6kHz
+  // Period = 1.6kHz / 61 = 20ms
+  // TMR0 = 61
+  TMR0 = 61;
+  // Enable the TMR0 interrupt
+  INTCONbits.TMR0IE = 1;
+  // Clear the TMR0 interrupt flag
+  INTCONbits.TMR0IF = 0;
+  // Enable the TMR0
+  T0CONbits.TMR0ON = 1;
+  // Set the TMR0 prescaler to 1:256
+  T0CONbits.T08BIT = 0;
+  T0CONbits.T0CS = 0;
+  T0CONbits.PSA = 0;
+  // low edge of the clock
+  T0CONbits.T0SE = 0;
+}
+//==============================================================================
+// Timer 0 interrupt service routine
+// Timer used: TMR0
+//==============================================================================
+void timer_isr() {
+  // Clear the TMR0 interrupt flag
+  INTCONbits.TMR0IF = 0;
+  // Increment the timer count
+  timer_count++;
+  // Check if the timer count is greater than the timer period
+  if (timer_count > 90) {
+    // Reset the timer count
+    timer_count = 0;
+    // Set the timer state to done
+    t_state = TMR_DONE;
+    // Set the timer preload value to 61
+    TMR0 = 61;
+  }
+}
+//==============================================================================
+// Delay function
+//==============================================================================
+void delay_ms(uint16_t delay) {
+  // Set the TMR0 prescaler to 1:256
+  T0CS = 0;
+  // TMR0 preload value = 61
+  // Freq = 40MHz / (256-61) = 1.6kHz
+  // Period = 1.6kHz / 61 = 20ms
+  // TMR0 = 61
+  TMR0 = 61;
+  // Enable the TMR0 interrupt
+  INTCONbits.TMR0IE = 1;
+  // Clear the TMR0 interrupt flag
+  INTCONbits.TMR0IF = 0;
+  // Enable the TMR0
+  T0CONbits.TMR0ON = 1;
+  // Set the TMR0 prescaler to 1:256
+  T0CONbits.T08BIT = 0;
+  T0CONbits.T0CS = 0;
+  T0CONbits.PSA = 0;
+  // low edge of the clock
+  T0CONbits.T0SE = 0;
+  // Delay loop
+  while (delay > 0) {
+    // Wait for the TMR0 interrupt
+    while (!INTCONbits.TMR0IF)
+      ;
+    // Clear the TMR0 interrupt flag
+    INTCONbits.TMR0IF = 0;
+    delay--;
+  }
+  // Disable the TMR0
+  T0CONbits.TMR0ON = 0;
+  // Disable the TMR0 interrupt
+  INTCONbits.TMR0IE = 0;
+}
+// ============================================================================
+// timer_update
+//==============================================================================
+void timer_update() {
+  // Check the timer state
+  switch (t_state) {
+  // If the timer is idle
+  case TMR_IDLE:
+    // Do nothing
+    break;
+  // If the timer is running
+  case TMR_RUN:
+    // Check if the timer count is greater than the timer period
+    if (timer_count > 90) {
+      // Reset the timer count
+      timer_count = 0;
+      // Set the timer state to done
+      t_state = TMR_DONE;
+      // Set the timer preload value to 61
+      TMR0 = 61;
+    }
+    break;
+  // If the timer is done
+  case TMR_DONE:
+    // Set the timer state to idle
+    t_state = TMR_IDLE;
+    // Set the timer preload value to 61
+    TMR0 = 61;
+    break;
+  }
+}
+// ============================================================================
+// ************* Input task and functions ****************
+//==============================================================================
+// The "input task" monitors RE[0-5] and increments associated counters
+// whenever a high pulse is observed (i.e. HIGH followed by a LOW).
+uint8_t re0_cnt = 0; // Current count for RE0 input
+uint8_t re1_cnt = 0; // Current count for RE0 input
+uint8_t re2_cnt = 0; // Current count for RE0 input
+uint8_t re3_cnt = 0; // Current count for RE0 input
+uint8_t re4_cnt = 0; // Current count for RE0 input
+uint8_t re5_cnt = 0; // Current count for RE0 input
+uint8_t re0_btn_st = 0, re1_btn_st = 0, re2_btn_st = 0, re3_btn_st = 0,
+        re4_btn_st = 0, re5_btn_st = 0; // Button state
+
+// This function resets the counter for RE0 input
+void re0_reset() { re0_cnt = 0; }
+// This function resets the counter for RE1 input
+void re1_reset() { re1_cnt = 0; }
+// This function resets the counter for RE2 input
+void re2_reset() { re2_cnt = 0; }
+// This function resets the counter for RE3 input
+void re3_reset() { re3_cnt = 0; }
+// This function resets the counter for RE4 input
+void re4_reset() { re4_cnt = 0; }
+// This function resets the counter for RE5 input
+void re5_reset() { re5_cnt = 0; }
+//==============================================================================
+// ************************ buttons_init_interrupt *****************************
+//==============================================================================
+// Initialize the buttons on port E RE0-RE4
+// Buttons used:
+// RE0 - RE4
+//==============================================================================
+void buttons_init() {
+  // Set the port E to be input
+  TRISE = 0xFF;
+  // Clear the port E latches
+  LATE = 0x00;
+}
+
+// This is the input task function
+void button_pressing() {
+  if (PORTEbits.RE0)
+    re0_btn_st = 1;
+  else if (re0_btn_st == 1) {
+    // A high pulse has been observed on the CONFIGURE input
+    re0_btn_st = 0;
+    re0_cnt++;
+  }
+  if (PORTEbits.RE1)
+    re1_btn_st = 1;
+  else if (re1_btn_st == 1) {
+    // A high pulse has been observed on the CONFIGURE input
+    re1_btn_st = 0;
+    re1_cnt++;
+  }
+  if (PORTEbits.RE2)
+    re2_btn_st = 1;
+  else if (re2_btn_st == 1) {
+    // A high pulse has been observed on the CONFIGURE input
+    re2_btn_st = 0;
+    re2_cnt++;
+  }
+  if (PORTEbits.RE3)
+    re3_btn_st = 1;
+  else if (re3_btn_st == 1) {
+    // A high pulse has been observed on the CONFIGURE input
+    re3_btn_st = 0;
+    re3_cnt++;
+  }
+  if (PORTEbits.RE4)
+    re4_btn_st = 1;
+  else if (re4_btn_st == 1) {
+    // A high pulse has been observed on the CONFIGURE input
+    re4_btn_st = 0;
+    re4_cnt++;
+  }
+  if (PORTEbits.RE5)
+    re5_btn_st = 1;
+  else if (re5_btn_st == 1) {
+    // A high pulse has been observed on the CONFIGURE input
+    re5_btn_st = 0;
+    re5_cnt++;
+  }
+}
+//==============================================================================
+// ***Interrupt Service Routine handling lcd, adc, timer , buttons and leds ***
+//==============================================================================
+ISR(TEM) {
+  // Timer1 is used to generate a 1ms interrupt
+  // This interrupt is used to update the lcd and the adc
+  // The timer is used to update the state of the game
+  // The buttons are used to update the state of the game
+  // The leds are used to update the state of the game
+  // The lcd is used to update the state of the game
+  // The adc is used to update the state of the game
+  // The game is updated in the main loop
+
+  // Update the lcd
+  lcd_update();
+
+  // Update the adc
+  adc_update();
+
+  // Update the timer
+  timer_update();
+
+  // Update the buttons
+  buttons_init();
+
+  // Update the leds
+  leds_grid_update();
+
+  // Update the seven segment display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+//==============================================================================
+// ************************** Interrupt Handler ********************************
+//==============================================================================
+void __interrupt() ISR_Handler() {
+  // Check if the interrupt is from the timer
+  if (INTCONbits.TMR0IF) {
+    // Clear the interrupt flag
+    INTCONbits.TMR0IF = 0;
+    // Update the timer
+    timer_update();
+  }
+  // Check if the interrupt is from the ADC
+  if (PIR1bits.ADIF) {
+    // Clear the interrupt flag
+    PIR1bits.ADIF = 0;
+    // Update the adc
+
+    adcReading = adc_update();
+  }
+}
+//==============================================================================
+// *****Interrupt intizialization for all the interrupts(buttons,timer) *******
+//==============================================================================
+void interrupts_init() {
+  timer_init();
+  buttons_init();
+  // initialize global interrupts
+  INTCONbits.GIEH = 1;
+  INTCONbits.GIEL = 1;
+}
+//==============================================================================
+// ************************* Initialize the board *****************************
+//==============================================================================
+void board_init() {
+  // initialize global variables
+  init_globals();
+  init_leds();
+  // initialize the ports
+  Initialize_Ports();
+  // Initialize the lcd
+  InitLCD();
+  // Initialize the adc
+  ADC_Init();
+  // Initialize the buttons
+  buttons_init();
+  // Initialize the leds
+  // Initialize the seven segment display
+  InitSevenSeg();
+  // Initialize the timer
+  timer_init();
+  // Initialize the interrupts
+  interrupts_init();
+  // Set the program state to idle
+  state = TEM;
+};
+
+//==============================================================================
+//************************ Text entry mode routine******************************
+//==============================================================================
+void text_entry_mode() {
+  // Start the ADC if it hasnt been started
+  if (ADCON0bits.ADON == 0) {
+    // Start the ADC
+    ADC_Start();
+  }
+  // Check the program state
+  button_pressing();
+  LcdSetCursor(1, adcReading);
+  // check if the button RE5 is pressed
+  if (re5_cnt > 0) {
+    re5_reset();
+    // Stay at the same program state
+    state = TSM;
+  } else if (re4_cnt > 0) {
+    re4_reset();
+    // Go to the CDM program state
+    cdm_State_init();
+    state = CDM;
+  } else if (re3_cnt > 0) {
+    re3_reset();
+    // Scroll backwards in custom characters array
+    if (customCharPos > 0) {
+      customCharPos--;
+    } else {
+      customCharPos = 7;
+    }
+    // Show the custom character on the LCD
+    LcdPrint(customChar[customCharPos]);
+    // Saves the charater in the text_string using the position of the cursor
+    text_str[adcReading] = customChar[customCharPos];
+  } else if (re2_cnt > 0) {
+    re2_reset();
+    // Scroll forwards in predefined characters array
+    if (preCharPos < (sizeof(PREDEFINED) - 1)) {
+      preCharPos++;
+    } else {
+      preCharPos = 0;
+    }
+    // Show the predefined character on the LCD
+    LcdPrint(PREDEFINED[preCharPos]);
+    // Saves the charater in the text_string using the position of the cursor
+    text_str[adcReading] = PREDEFINED[preCharPos];
+  } else if (re1_cnt > 0) {
+    re1_reset();
+    // Scroll backwards in predefined characters array
+    if (preCharPos > 0) {
+      preCharPos--;
+    } else {
+      preCharPos = strlen(PREDEFINED) - 1;
+    }
+    LcdPrint(PREDEFINED[preCharPos]);
+    // Saves the charater in the text_string using the position of the cursor
+    text_str[adcReading] = PREDEFINED[preCharPos];
+  } else if (re0_cnt > 0) {
+    re0_reset();
+    // Scroll forwards in custom characters array
+    if (customCharPos < 7) {
+      customCharPos++;
+    } else {
+      customCharPos = 0;
+    }
+    LcdPrint(customChar[customCharPos]);
+    // Saves the charater in the text_string using the position of the cursor
+    text_str[adcReading] = customChar[customCharPos];
+  }
+  if (re3_cnt > 0 || re2_cnt > 0 || re1_cnt > 0 || re0_cnt > 0) {
+    // stay in the same program state
+    state = TEM;
+  }
+  Pulse();
+  LcdPrint("_");
+}
+
+void text_entry_mode_init() {
+  // Initialize the LCD
+  LcdClear();
+  // Initialize the ADC
+  ADC_Init();
+  // Initialize the buttons
+  buttons_init();
+  // Initialize the leds
+  // Initialize the seven segment display
+  InitSevenSeg();
+  // Initialize the timer
+  timer_init();
+  // Initialize the interrupts
+  interrupts_init();
+  // Set the program state to idle
+  state = TEM;
+}
+//==============================================================================
+// **********************Custom character mode routine**************************
+//==============================================================================
+// initialize custom character mode rountine
+void cdm_State_init() {
+  // init PORTA, PORTB, PORTC, PORTD as outputs
+  TRISA = 0x00;
+  TRISB = 0x00;
+  TRISC = 0x00;
+  TRISD = 0x00;
+  // Clear Ports
+  PORTA = 0x00;
+  PORTB = 0x00;
+  PORTC = 0x00;
+  PORTD = 0x00;
+  // button init
+  buttons_init();
+  // turn off the ADC module
+  ADC_Stop();
+  // clear the LCD
+  LcdClear();
+  // init the seven segment display
+  InitSevenSeg();
+  // set the custom character position to 0
+  custom_Char_pos_seg[0] = 0;
+  custom_Char_pos_seg[1] = 0;
+  // set the program state to CDM
+  state = CDM;
+  // Set LCD cursor to the first character
+  LcdSetCursor(0, 0);
+  // Display the custom character on the LCD
+  LcdPrint(customChar[customCharCount]);
+  // Display the custom character position and count on the seven segment
+  // display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+
+void move_cursor_up() {
+  if (custom_Char_pos_seg[1] == 0) {
+    custom_Char_pos_seg[1] = 7;
+  } else {
+    custom_Char_pos_seg[1]--;
+  }
+
+  // light up the correct LED
+  leds_grid_update();
+  LcdPrint(customChar[customCharCount]);
+  // Display the custom character position and count on the seven segment
+  // display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+void move_cursor_down() {
+  if (custom_Char_pos_seg[1] == 7) {
+    custom_Char_pos_seg[1] = 0;
+  } else {
+    custom_Char_pos_seg[1]++;
+  }
+  // light up the correct LED
+  leds_grid_update();
+  LcdPrint(customChar[customCharCount]);
+  // Display the custom character position and count on the seven segment
+  // display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+
+void move_cursor_left() {
+  if (custom_Char_pos_seg[0] == 0) {
+    custom_Char_pos_seg[0] = 4;
+  } else {
+    custom_Char_pos_seg[0]--;
+  }
+  // light up the correct LED
+  leds_grid_update();
+  LcdPrint(customChar[customCharCount]);
+  // Display the custom character position and count on the seven segment
+  // display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+
+void move_cursor_right() {
+  if (custom_Char_pos_seg[0] == 4) {
+    custom_Char_pos_seg[0] = 0;
+  } else {
+    custom_Char_pos_seg[0]++;
+  }
+  // light up the correct LED
+  leds_grid_update();
+  LcdPrint(customChar[customCharCount]);
+  // Display the custom character position and count on the seven segment
+  // display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+
+void confirm_selection() {
+  led_grid[custom_Char_pos_seg[0]] = (1 << custom_Char_pos_seg[1]);
+  // light up the correct LED
+  // add the custom character array
+  //copy led_grid to customChar 
+  strcpy(customChar[customCharCount], led_grid);
+  // increment the custom character count
+  customCharCount++;
+  // reset the custom character position
+  custom_Char_pos_seg[0] = 0;
+  custom_Char_pos_seg[1] = 0;
+
+  leds_grid_update();
+  // update the LCD
+  // Set the LCD cursor to the first character
+  LcdSetCursor(0, 0);
+  // Display the custom character on the LCD
+  LcdPrint(customChar[customCharCount]);
+  // update the seven segment display
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+                 custom_Char_pos_seg[1]);
+}
+
+void leds_grid_update() {
+  // set up the values of led_grid to PORTA, PORTB, PORTC, PORTD
+  // PORTA
+  PORTA = 0x00;
+  // PORTB
+  PORTB = 0x00;
+  // PORTC
+  PORTC = 0x00;
+  // PORTD
+  PORTD = 0x00;
+  // PORTA
+  PORTA = led_grid[0];
+  // PORTB
+  PORTB = led_grid[1];
+  // PORTC
+  PORTC = led_grid[2];
+  // PORTD
+  PORTD = led_grid[3];
+}
+
+void character_display_mode() {
+  // we are in custom character definition mode
+  // check if the user has pressed the up button
+  button_pressing();
+  if (re3_cnt > 0) {
+    re3_reset();
+    move_cursor_up();
+  }
+  // check if the user has pressed the down button
+  if (re2_cnt > 0) {
+    re2_reset();
+    move_cursor_down();
+  }
+  // check if the user has pressed the left button
+  if (re1_cnt > 0) {
+    re1_reset();
+    move_cursor_left();
+  }
+  // check if the user has pressed the right button
+  if (re0_cnt > 0) {
+    re0_reset();
+    move_cursor_right();
+  }
+  // check if the user has pressed the confirm button
+  if (re4_cnt > 0) {
+    re4_reset();
+    confirm_selection();
+  }
+  // check if the user has pressed the back button
+  if (re5_cnt > 0) {
+    re5_reset();
+    state = TEM;
+    // init text entry mode
+    text_entry_mode_init();
+  }
+}
+// end of custom character definition mode
+//==============================================================================
+// start of text scrolling mode
+// ********************* TEXT SCROLLING MODE **********************************
+//==============================================================================
+void text_scroll_mode() {
+  // init the seven segment display
+  InitSevenSeg();
+  // set the program state to TSM
+  state = TSM;
+  UpdateSevenSeg(customCharCount, 0, 0);
+  // turn off all the LEDs
+  led_grid[0] = 0x00;
+  led_grid[1] = 0x00;
+  led_grid[2] = 0x00;
+  led_grid[3] = 0x00;
+  // set up the values of led_grid to PORTA, PORTB, PORTC, PORTD
+  // PORTA
+  PORTA = 0x00;
+  // PORTB
+  PORTC = 0x00;
+  // PORTC
+  PORTD = 0x00;
+  // PORTD
+  PORTB = 0x00;
+  // turn off all the LEDs
+  leds_grid_update();
+
+  // init the LCD
+  InitLCD();
+  // clear the LCD
+  LcdClear();
+  // Set LCD cursor to the first character
+  LcdSetCursor(0, 0);
+  // Display the custom character on the LCD
+  LcdPrintFirstRow("   finished     ");
+  LcdSetCursor(1, 0);
+  LcdPrintSecondRow(text_str);
+}
+// ============================================================================
+// Main program routine
+// description: the main program routine will initialize the board, and then
+//              will call the main loop and depending on the state of the
+//              program will call the appropriate function
+// ============================================================================
+void main(void) {
+  board_init();
+  while (1) {
+    switch (state) {
+    case INIT:
+      // the program hasnt been initizalized yet then wait till it is done.
+      break;
+    case TEM:
+      // the program is in the text entry mode and the user can enter the
+      // text
+      text_entry_mode();
+      break;
+    case CDM:
+      // the program is in the character display mode and the user can
+      // display the text
+      character_display_mode();
+      break;
+    case TSM:
+      // the program is in the text scroll mode and the user can scroll the
+      // text
+      text_scroll_mode();
+      break;
+    }
+  }
+}
