@@ -1,6 +1,5 @@
 #include "adc.h"
 #include "Includes.h"
-#include <sys/types.h>
 
 // PIC 18F8722 ADC module initialization @40MHz
 //==============================================================================
@@ -21,14 +20,7 @@
 //  ADC resolution: 10 bits
 //==============================================================================
 void ADC_Init(void) {
-  // ADCON1 Register
-  ADCON1bits.ADCS =
-      0b010; // ADC conversion clock period: 4*ADC_CLK_PERIOD = 4*250ns = 1us
-  ADCON1bits.ADFM = 1; // ADC result right justified
-  ADCON1bits.ADPREF =
-      0b00; // ADC Voltage Reference: 5V (VREF+ = VDD, VREF- = VSS)
-  ADCON1bits.ADNREF = 0b0;  // ADC Voltage Reference: VSS
-  ADCON1bits.ADON = 1;      // ADC module enable
+  // ADCON1 Register;      
   ADCON1bits.PCFG = 0b1100; // ADC input channels: [AN0-AN7]
   ADCON1bits.VCFG = 0b00;   // ADC Input Buffer Gain: 1x
 
@@ -39,13 +31,10 @@ void ADC_Init(void) {
       0b010; // ADC aquisition time: 4*ADC_CLK_PERIOD = 4*250ns = 1us
   ADCON2bits.ADCS =
       0b010; // ADC conversion clock period: 4*ADC_CLK_PERIOD = 4*250ns = 1us
-  ADCON2bits.ADRC = 0b0; // ADC conversion clock source: FOSC/2
   ADCON2bits.ADFM = 1;   // ADC result right justified
 
   // ADCON0 Register
   ADCON0bits.CHS = 0b0000; // ADC input channel: AN0
-  ADCON0bits.ADCS =
-      0b100; // ADC conversion clock period: 4*ADC_CLK_PERIOD = 4*250ns = 1us
   ADCON0bits.GO_DONE = 0b0; // ADC conversion start: Disabled
   ADCON0bits.ADON = 1;      // ADC module enable
 
@@ -101,7 +90,7 @@ int adc_update(void) {
   } else {
     ADC_Read(0b0000);
   }
-  uint8_t res = (ADRESH << 8) + ADRESL;
+  int res = (ADRESH << 8) + ADRESL;
 
   if (res > 1023) {
     res = 1023;
@@ -109,5 +98,5 @@ int adc_update(void) {
   if (res < 0) {
     res = 0;
   }
-  return int((res + 1) / 64);
+  return (res + 1) / 64;
 }

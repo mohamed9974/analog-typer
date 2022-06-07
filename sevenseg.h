@@ -2,7 +2,6 @@
 #define _SEVENSEG_H_
 
 #include "Includes.h"
-#include <cstdint>
 #include <stdint.h>
 // This is the PIC to Seven Segment pin mapping
 // We use ports H and J for the 7-segment display

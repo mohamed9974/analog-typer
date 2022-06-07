@@ -1,10 +1,10 @@
-#ifndef _INCLUDES_H_
-#define	_INCLUDES_H_
+#ifndef INCLUDES_H_
+#define	INCLUDES_H_
 
 // PIC18F8722 Configuration Bit Settings @ 40MHz
 
-// #include <xc.h>
-// #include <p18cxxx.h>
+#include <xc.h>
+#include <p18cxxx.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>

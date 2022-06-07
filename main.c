@@ -17,7 +17,7 @@ tmr_state_t t_state;
 btn_state_t b_state;
 state_t state;
 uint8_t timer_count;
-byte customChar[8][4] = {{0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+volatile uint8_t customChar[8][4] = {{0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
                          {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
                          {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
                          {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00}};
@@ -73,7 +73,7 @@ void clrf_ports() {
 void timer_init() {
   // Timer 0 is used for the delay functions
   // Set the TMR0 prescaler to 1:256
-  OPTION_REGbits.T0CS = 0;
+  T0CS = 0;
   // TMR0 preload value = 61
   // Freq = 40MHz / (256-61) = 1.6kHz
   // Period = 1.6kHz / 61 = 20ms
@@ -102,7 +102,7 @@ void timer_isr() {
   // Increment the timer count
   timer_count++;
   // Check if the timer count is greater than the timer period
-  if (timer_count > TIMER_PERIOD) {
+  if (timer_count > 90) {
     // Reset the timer count
     timer_count = 0;
     // Set the timer state to done
@@ -116,7 +116,7 @@ void timer_isr() {
 //==============================================================================
 void delay_ms(uint16_t delay) {
   // Set the TMR0 prescaler to 1:256
-  OPTION_REGbits.T0CS = 0;
+  T0CS = 0;
   // TMR0 preload value = 61
   // Freq = 40MHz / (256-61) = 1.6kHz
   // Period = 1.6kHz / 61 = 20ms
@@ -161,7 +161,7 @@ void timer_update() {
   // If the timer is running
   case TMR_RUN:
     // Check if the timer count is greater than the timer period
-    if (timer_count > TIMER_PERIOD) {
+    if (timer_count > 90) {
       // Reset the timer count
       timer_count = 0;
       // Set the timer state to done
@@ -265,78 +265,6 @@ void button_pressing() {
   }
 }
 //==============================================================================
-// ******************* buttons interrupt service routine **********************
-//==============================================================================
-void buttons_isr() {
-  // Check the button state
-  switch (b_state) {
-  // If the button is idle
-  case BTN_IDLE:
-    // Check if the button is pressed
-    if (PORT_E & 0x01) {
-      // Set the button state to pressed
-      b_state = BTN_PRESSED;
-      // Set the button pressed
-      b_pressed = 1;
-    }
-    break;
-  // If the button is pressed
-  case BTN_PRESSED:
-    // Check if the button is released
-    if (!(PORT_E & 0x01)) {
-      // Set the button state to released
-      b_state = BTN_RELEASED;
-      // Set the button released
-      b_released = 1;
-    }
-    break;
-  // If the button is released
-  case BTN_RELEASED:
-    // Check if the button is pressed
-    if (PORT_E & 0x01) {
-      // Set the button state to pressed
-      b_state = BTN_PRESSED;
-      // Set the button pressed
-      b_pressed = 1;
-    }
-    break;
-  }
-}
-
-//==============================================================================
-// **************************** buttons_update *********************************
-//==============================================================================
-void buttons_update() {
-  // Check the button state
-  switch (b_state) {
-  // If the button is idle
-  case BTN_IDLE:
-    // Do nothing
-    break;
-  // If the button is pressed
-  case BTN_PRESSED:
-    // Check if the button is released
-    if (b_released) {
-      // Set the button state to released
-      b_state = BTN_RELEASED;
-      // Clear the button released
-      b_released = 0;
-    }
-    break;
-  // If the button is released
-  case BTN_RELEASED:
-    // Check if the button is pressed
-    if (b_pressed) {
-      // Set the button state to pressed
-      b_state = BTN_PRESSED;
-      // Clear the button pressed
-      b_pressed = 0;
-    }
-    break;
-  }
-}
-
-//==============================================================================
 // ***Interrupt Service Routine handling lcd, adc, timer , buttons and leds ***
 //==============================================================================
 ISR(TIMER1_COMPA_vect) {
@@ -365,7 +293,7 @@ ISR(TIMER1_COMPA_vect) {
   leds_grid_update();
 
   // Update the seven segment display
-  UpdateSevenSeg(customCharCount, customCharPos);
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],custom_Char_pos_seg[1]);
 }
 //==============================================================================
 // ************************** Interrupt Handler ********************************
@@ -434,7 +362,7 @@ void text_entry_mode() {
   }
   // Check the program state
   button_pressing();
-  LcdSetCursor(1, adcReading)
+  LcdSetCursor(1, adcReading);
       // check if the button RE5 is pressed
       if (re5_cnt > 0) {
     re5_reset();
@@ -463,7 +391,7 @@ void text_entry_mode() {
   else if (re2_cnt > 0) {
     re2_reset();
     // Scroll forwards in predefined characters array
-    if (preCharPos < (sizeof(preChar) - 1)) {
+    if (preCharPos < (sizeof(PREDEFINED) - 1)) {
       preCharPos++;
     } else {
       preCharPos = 0;
@@ -479,7 +407,7 @@ void text_entry_mode() {
     if (preCharPos > 0) {
       preCharPos--;
     } else {
-      preCharPos = PREDEFINED.length - 1;
+      preCharPos = strlen(PREDEFINED) - 1;
     }
     LcdPrint(PREDEFINED[preCharPos]);
     // Saves the charater in the text_string using the position of the cursor
@@ -747,7 +675,7 @@ void main(void) {
   board_init();
   while (1) {
     switch (state) {
-    case IDLE:
+    case INIT:
       // the program hasnt been initizalized yet then wait till it is done.
       break;
     case TEM:
