@@ -17,11 +17,10 @@ tmr_state_t t_state;
 btn_state_t b_state;
 state_t state;
 uint8_t timer_count;
-volatile uint8_t customChar[8][4] = {
-    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00}};
+volatile uint8_t customChar[8][4] = {{0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+                         {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+                         {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00},
+                         {0x00, 0x00, 0x00, 0x00}, {0x00, 0x00, 0x00, 0x00}};
 
 //==============================================================================
 // Initialize global variables
@@ -294,8 +293,7 @@ ISR(TIMER1_COMPA_vect) {
   leds_grid_update();
 
   // Update the seven segment display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
+  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],custom_Char_pos_seg[1]);
 }
 //==============================================================================
 // ************************** Interrupt Handler ********************************
@@ -365,17 +363,19 @@ void text_entry_mode() {
   // Check the program state
   button_pressing();
   LcdSetCursor(1, adcReading);
-  // check if the button RE5 is pressed
-  if (re5_cnt > 0) {
+      // check if the button RE5 is pressed
+      if (re5_cnt > 0) {
     re5_reset();
     // Stay at the same program state
     state = TSM;
-  } else if (re4_cnt > 0) {
+  }
+  else if (re4_cnt > 0) {
     re4_reset();
     // Go to the CDM program state
     cdm_State_init();
     state = CDM;
-  } else if (re3_cnt > 0) {
+  }
+  else if (re3_cnt > 0) {
     re3_reset();
     // Scroll backwards in custom characters array
     if (customCharPos > 0) {
@@ -387,7 +387,8 @@ void text_entry_mode() {
     LcdPrint(customChar[customCharPos]);
     // Saves the charater in the text_string using the position of the cursor
     text_str[adcReading] = customChar[customCharPos];
-  } else if (re2_cnt > 0) {
+  }
+  else if (re2_cnt > 0) {
     re2_reset();
     // Scroll forwards in predefined characters array
     if (preCharPos < (sizeof(PREDEFINED) - 1)) {
@@ -399,7 +400,8 @@ void text_entry_mode() {
     LcdPrint(PREDEFINED[preCharPos]);
     // Saves the charater in the text_string using the position of the cursor
     text_str[adcReading] = PREDEFINED[preCharPos];
-  } else if (re1_cnt > 0) {
+  }
+  else if (re1_cnt > 0) {
     re1_reset();
     // Scroll backwards in predefined characters array
     if (preCharPos > 0) {
@@ -410,7 +412,8 @@ void text_entry_mode() {
     LcdPrint(PREDEFINED[preCharPos]);
     // Saves the charater in the text_string using the position of the cursor
     text_str[adcReading] = PREDEFINED[preCharPos];
-  } else if (re0_cnt > 0) {
+  }
+  else if (re0_cnt > 0) {
     re0_reset();
     // Scroll forwards in custom characters array
     if (customCharPos < 7) {
