@@ -1,8 +1,6 @@
 #include "header.h"
 #include "lcd.h"
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
 typedef enum { TMR_IDLE, TMR_RUN, TMR_DONE } tmr_state_t;
 typedef enum { BTN_IDLE, BTN_PRESSED, BTN_RELEASED } btn_state_t;
@@ -14,7 +12,7 @@ uint8_t customCharCount = 0;
 uint8_t adcReading;
 uint8_t custom_Char_pos_seg[2];
 char text_str[16] = {'\0'};
-uint8_t led_grid[4] = {0, 0, 0, 0};
+uint8_t led_grid[4]={0,0,0,0};
 tmr_state_t t_state;
 btn_state_t b_state;
 state_t state;
@@ -548,11 +546,13 @@ void move_cursor_right() {
 }
 
 void confirm_selection() {
-  led_grid[custom_Char_pos_seg[0]] = (1 << custom_Char_pos_seg[1]);
+  led_grid[custom_Char_pos_seg[0]][custom_Char_pos_seg[1]] = 1;
   // light up the correct LED
   // add the custom character array
-  //copy led_grid to customChar 
-  strcpy(customChar[customCharCount], led_grid);
+  customChar[customCharCount] = led_grid[0][0] + led_grid[0][1] * 2 +
+                                led_grid[0][2] * 4 + led_grid[0][3] * 8 +
+                                led_grid[1][0] * 16 + led_grid[1][1] * 32 +
+                                led_grid[1][2] * 64 + led_grid[1][3] * 128;
   // increment the custom character count
   customCharCount++;
   // reset the custom character position
