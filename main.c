@@ -119,6 +119,7 @@ void timer_isr() {
   timer_count++;
   // Check if the timer count is greater than the timer period
   if (timer_count > 90) {
+    //TODO needs refining
     // Reset the timer count
     timer_count = 0;
     // Set the timer state to done
@@ -467,6 +468,10 @@ void text_entry_mode_init() {
 //==============================================================================
 // initialize custom character mode rountine
 void cdm_State_init() {
+  // turn off the ADC module
+  ADC_Stop();
+  // clear the LCD
+  LcdClear();
   // init PORTA, PORTB, PORTC, PORTD as outputs
   TRISA = 0x00;
   TRISB = 0x00;
@@ -479,10 +484,6 @@ void cdm_State_init() {
   PORTD = 0x00;
   // button init
   buttons_init();
-  // turn off the ADC module
-  ADC_Stop();
-  // clear the LCD
-  LcdClear();
   // init the seven segment display
   InitSevenSeg();
   // set the custom character position to 0
@@ -491,7 +492,7 @@ void cdm_State_init() {
   // set the program state to CDM
   state = CDM;
   // Set LCD cursor to the first character
-  LcdSetCursor(0, 0);
+  LcdSetCursor(1, 0);
   // Display the custom character on the LCD
   LcdPrint(customChar[customCharCount]);
   // Display the custom character position and count on the seven segment
@@ -564,18 +565,18 @@ void confirm_selection() {
   led_grid[custom_Char_pos_seg[0]] = (1 << custom_Char_pos_seg[1]);
   // light up the correct LED
   // add the custom character array
-  //copy led_grid to customChar 
+  // copy led_grid to customChar
   strcpy(customChar[customCharCount], led_grid);
   // increment the custom character count
   customCharCount++;
   // reset the custom character position
   custom_Char_pos_seg[0] = 0;
   custom_Char_pos_seg[1] = 0;
-
+  //TODO clear led_grid
   leds_grid_update();
   // update the LCD
   // Set the LCD cursor to the first character
-  LcdSetCursor(0, 0);
+  LcdSetCursor(1, 1);
   // Display the custom character on the LCD
   LcdPrint(customChar[customCharCount]);
   // update the seven segment display
@@ -672,10 +673,10 @@ void text_scroll_mode() {
   // clear the LCD
   LcdClear();
   // Set LCD cursor to the first character
-  LcdSetCursor(0, 0);
+  LcdSetCursor(1, 1);
   // Display the custom character on the LCD
   LcdPrintFirstRow("   finished     ");
-  LcdSetCursor(1, 0);
+  LcdSetCursor(2, 1);
   LcdPrintSecondRow(text_str);
 }
 // ============================================================================
