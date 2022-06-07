@@ -56,10 +56,13 @@ void LcdSetCursor(uint8_t row, uint8_t col) {
   }
 }
 
+// Clears the LCD
 void LcdClear(void) {
+  //send clear command
   LcdCmd(0x01);
   __delay_ms(2);
 }
+
 
 void CreateChar(uint8_t addr, uint8_t charmap[]) {
   addr &= 0x7;                // we only have 8 locations 0-7
@@ -69,7 +72,8 @@ void CreateChar(uint8_t addr, uint8_t charmap[]) {
   }
 }
 
-void LcdPrint(char *str) {
+// prints a string of text to the LCD
+void LcdPrint(const char *str) {
   while (*str) {
     LcdData(*str++);
   }

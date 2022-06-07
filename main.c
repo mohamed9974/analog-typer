@@ -284,39 +284,39 @@ void button_pressing() {
 //==============================================================================
 // ***Interrupt Service Routine handling lcd, adc, timer , buttons and leds ***
 //==============================================================================
-ISR(TEM) {
-  // Timer1 is used to generate a 1ms interrupt
-  // This interrupt is used to update the lcd and the adc
-  // The timer is used to update the state of the game
-  // The buttons are used to update the state of the game
-  // The leds are used to update the state of the game
-  // The lcd is used to update the state of the game
-  // The adc is used to update the state of the game
-  // The game is updated in the main loop
-
-  // Update the lcd
-  lcd_update();
-
-  // Update the adc
-  adc_update();
-
-  // Update the timer
-  timer_update();
-
-  // Update the buttons
-  buttons_init();
-
-  // Update the leds
-  leds_grid_update();
-
-  // Update the seven segment display
-  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
-                 custom_Char_pos_seg[1]);
-}
+//ISR(TEM) {
+//  // Timer1 is used to generate a 1ms interrupt
+//  // This interrupt is used to update the lcd and the adc
+//  // The timer is used to update the state of the game
+//  // The buttons are used to update the state of the game
+//  // The leds are used to update the state of the game
+//  // The lcd is used to update the state of the game
+//  // The adc is used to update the state of the game
+//  // The game is updated in the main loop
+//
+//  // Update the lcd
+//  lcd_update();
+//
+//  // Update the adc
+//  adc_update();
+//
+//  // Update the timer
+//  timer_update();
+//
+//  // Update the buttons
+//  buttons_init();
+//
+//  // Update the leds
+//  leds_grid_update();
+//
+//  // Update the seven segment display
+//  UpdateSevenSeg(customCharCount, custom_Char_pos_seg[0],
+//                 custom_Char_pos_seg[1]);
+//}
 //==============================================================================
 // ************************** Interrupt Handler ********************************
 //==============================================================================
-void __interrupt() ISR_Handler() {
+void __interrupt() interrupt_handler(void) {
   // Check if the interrupt is from the timer
   if (INTCONbits.TMR0IF) {
     // Clear the interrupt flag
@@ -325,7 +325,7 @@ void __interrupt() ISR_Handler() {
     timer_update();
   }
   // Check if the interrupt is from the ADC
-  if (PIR1bits.ADIF) {
+  if (ADIF) {
     // Clear the interrupt flag
     PIR1bits.ADIF = 0;
     // Update the adc
