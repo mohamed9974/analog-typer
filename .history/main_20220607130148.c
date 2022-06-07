@@ -348,7 +348,6 @@ void interrupts_init() {
 void board_init() {
   // initialize global variables
   init_globals();
-  init_leds();
   // initialize the ports
   Initialize_Ports();
   // Initialize the lcd
@@ -358,6 +357,7 @@ void board_init() {
   // Initialize the buttons
   buttons_init();
   // Initialize the leds
+  leds_init();
   // Initialize the seven segment display
   InitSevenSeg();
   // Initialize the timer

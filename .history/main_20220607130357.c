@@ -348,7 +348,7 @@ void interrupts_init() {
 void board_init() {
   // initialize global variables
   init_globals();
-  init_leds();
+  ();
   // initialize the ports
   Initialize_Ports();
   // Initialize the lcd

@@ -63,7 +63,6 @@ void buttons_isr();
 void buttons_update();
 void button_pressing();
 
-void init_leds(void) ;
 void init_globals(void);
 void clrf_ports(void);
 void Initialize_Ports(void);

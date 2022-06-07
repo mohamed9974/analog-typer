@@ -56,6 +56,7 @@ void LcdCmd(uint8_t cmd);
 void LcdData(uint8_t data);
 void LcdPrintatlocation(char* buf, uint8_t row, uint8_t col);
 void LcdPrintAll(char *buf);
+void LcdPrint(char* str);
 void LcdClear();
 void LcdSetCursor(uint8_t row, uint8_t col);
 void lcd_update();//TODO: implement this function
